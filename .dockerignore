@@ -2,6 +2,7 @@
 .omo
 .venv
 .kioskproof
+videos/
 node_modules
 .env
 .env.*
