@@ -23,7 +23,7 @@ test("workspace renders real controls without horizontal overflow or browser err
 });
 
 test("HTTP boundary rejects untrusted actions and unknown resources", async ({ request }) => {
-  const health = await request.get("/healthz");
+  const health = await request.get("/health");
   expect(health.status()).toBe(200);
   expect((await health.json()).modelId).toBe("gemini-4-argon");
   const crossOrigin = await request.post("/api/runs", { headers: { Origin: "https://untrusted.example" }, data: {} });

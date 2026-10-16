@@ -51,6 +51,6 @@ gcloud run deploy kioskproof --image="$IMAGE" --project="$PROJECT" --region="$RE
   --set-secrets="GEMINI_API_KEY=kioskproof-gemini:latest"
 URL="$(gcloud run services describe kioskproof --project="$PROJECT" --region="$REGION" --format='value(status.url)')"
 printf 'KIOSKPROOF_CLOUD_URL %s\n' "$URL"
-curl --fail --silent --show-error "$URL/healthz"
+curl --fail --silent --show-error "$URL/health"
 printf '\nExport evidence before the temporary event project is removed:\n'
 printf 'gcloud storage rsync --recursive gs://%s .kioskproof/cloud-backup --project=%s\n' "$BUCKET" "$PROJECT"

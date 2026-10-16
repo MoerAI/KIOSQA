@@ -17,7 +17,7 @@ export default defineConfig({
   },
   webServer: {
     command: "bun src/server.ts",
-    url: "http://127.0.0.1:3098/healthz",
+    url: "http://127.0.0.1:3098/health",
     reuseExistingServer: false,
     env: { PORT: "3098", GEMINI_API_KEY: "", GCS_BUCKET: "", KIOSKPROOF_DATA_DIR: ".kioskproof/ui-qa/runtime" },
     timeout: 30000,

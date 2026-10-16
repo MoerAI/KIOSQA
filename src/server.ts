@@ -36,7 +36,7 @@ export async function startServer(options: { port?: number; dataRoot?: string } 
     async fetch(request) {
       try {
         const url = new URL(request.url);
-        if (request.method === "GET" && url.pathname === "/healthz") {
+        if (request.method === "GET" && url.pathname === "/health") {
           return json({ status: "ready", product: "KioskProof", runtime: "google-antigravity", modelId: config.modelId, sdkVersion: agent?.sdkVersion, toolsDenied: agent?.toolsDenied, agentConfigured: config.agentAvailable });
         }
         if (request.method === "GET" && url.pathname === "/") {
