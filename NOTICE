@@ -1,0 +1,11 @@
+KioskProof is newly written hackathon application code by MoerAI.
+
+Runtime dependencies:
+- Microsoft Playwright / @playwright/test: Apache License 2.0.
+  https://github.com/microsoft/playwright
+- Google Antigravity Python SDK: see the pinned distribution's license.
+  https://github.com/google-antigravity/antigravity-sdk-python
+
+KioskProof does not incorporate source code from
+rjsx197047/AI-Automation-QA-Engineer, Stagehand, Magnitude, or TodoMVC.
+The supplied research and PRD distinguish design research from product code.
