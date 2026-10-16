@@ -200,7 +200,7 @@ try {
     runId, verdict: run.verdict, elapsedMs: Math.round(performance.now() - started),
     source: base, model: run.attempts.at(-1)?.model, directory,
     approvalMode: "qa_driver", recording: "genuine browser recording, not live playback",
-    artifacts: recordingArtifacts, evidence: runArtifacts,
+    artifacts: recordingArtifacts, evidenceCount: runArtifacts.evidence.length,
   }));
 } finally {
   proofAbort.abort();

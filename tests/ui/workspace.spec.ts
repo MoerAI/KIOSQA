@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
-import { renderPage } from "../../src/ui";
+import { renderPage, renderRun } from "../../src/ui";
 import { DEFAULT_POLICY, TEST_IDS, type Run, type SuiteResult } from "../../src/types";
 
 test("workspace renders real controls without horizontal overflow or browser errors", async ({ page }, testInfo) => {
@@ -32,6 +32,43 @@ test("HTTP boundary rejects untrusted actions and unknown resources", async ({ r
   expect(badType.status()).toBe(415);
   const unknown = await request.get("/api/runs/00000000-0000-0000-0000-000000000000");
   expect(unknown.status()).toBe(404);
+});
+
+test("starting a run moves the live workflow ahead of the intake form", async ({ page }, testInfo) => {
+  const now = new Date().toISOString();
+  const run: Run = {
+    id: "00000000-0000-4000-8000-000000000002", targetId: "synthetic-checkout", scenarioId: "duplicate-checkout",
+    createdAt: now, updatedAt: now, phase: "preparing",
+    input: { policyText: DEFAULT_POLICY, scenarioParameters: { delayMs: 800, repeatCount: 2 } },
+    baselineRevision: "sha256:" + "b".repeat(64), executionStatus: "completed",
+    baselineStatus: "inconclusive", verificationStatus: "not_run", humanApproval: "pending",
+    verdict: "NOT_VERIFIED", executionMode: "reviewed_fixed_target", attempts: [],
+    evidence: [], approvals: [], events: [], durations: {}, storage: { mode: "local" }, limitations: [],
+  };
+  await page.route("**/new-run-layout", (route) => route.fulfill({
+    contentType: "text/html",
+    body: renderPage(undefined, [], {
+      modelId: "gemini-4-argon", cloudProject: "layout-fixture", cloudRegion: "test",
+      storageMode: "local", agentAvailable: true,
+    }),
+  }));
+  await page.route("**/api/runs", (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ run, html: renderRun(run) }),
+  }));
+  await page.goto("/new-run-layout");
+  await page.locator('#run-form button[type="submit"]').click();
+  await expect(page.locator("#run-panel [data-run-id]")).toBeVisible();
+  await expect(page.locator(".content.has-run")).toBeVisible();
+  const positions = await page.evaluate(() => ({
+    run: document.querySelector("#run-panel")!.getBoundingClientRect().top,
+    form: document.querySelector(".intake")!.getBoundingClientRect().top,
+  }));
+  expect(positions.run).toBeLessThan(positions.form);
+  await expect(page.locator(".rail-history .selected")).toHaveCount(1);
+  await expect(page.locator(".rail-empty")).toHaveCount(0);
+  await mkdir(".kioskproof/ui-qa", { recursive: true });
+  await page.screenshot({ path: `.kioskproof/ui-qa/created-${testInfo.project.name}.png`, fullPage: true });
 });
 
 test("a populated repair diff remains inside the mobile viewport", async ({ page }, testInfo) => {

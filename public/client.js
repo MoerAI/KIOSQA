@@ -85,6 +85,30 @@
     }
     const expanded = [...panel.querySelectorAll("details[data-detail-id][open]")].map((item) => item.dataset.detailId);
     panel.innerHTML = data.html;
+    document.querySelector(".content")?.classList.add("has-run");
+    const historyList = document.querySelector(".rail-history");
+    historyList?.querySelector(".rail-empty")?.remove();
+    if (historyList) {
+      const entries = [...historyList.querySelectorAll("a.history-item")];
+      let currentEntry = entries.find((entry) => new URL(entry.href).searchParams.get("run") === data.run.id);
+      if (!currentEntry) {
+        currentEntry = document.createElement("a");
+        currentEntry.className = "history-item";
+        currentEntry.href = `/?run=${encodeURIComponent(data.run.id)}`;
+        const dot = document.createElement("span");
+        dot.className = "history-dot";
+        const id = document.createElement("code");
+        id.textContent = data.run.id.slice(0, 8);
+        const status = document.createElement("small");
+        currentEntry.append(dot, id, status);
+        historyList.querySelector(".eyebrow")?.after(currentEntry);
+      }
+      for (const entry of historyList.querySelectorAll("a.history-item")) {
+        entry.classList.toggle("selected", entry === currentEntry);
+      }
+      currentEntry.querySelector(".history-dot").className = `history-dot ${data.run.verdict === "VERIFIED_IN_SCOPE" ? "success" : data.run.phase === "failed" ? "failure" : ""}`;
+      currentEntry.querySelector("small").textContent = data.run.phase === "complete" ? "verified" : data.run.phase.replaceAll("_", " ");
+    }
     selectTab(selectedTab);
     for (const item of panel.querySelectorAll("details[data-detail-id]")) {
       if (expanded.includes(item.dataset.detailId)) item.open = true;
