@@ -1,6 +1,5 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { validatePatch } from "./patch";
 import type { ModelMeta, ModelResult, PatchProposal, ProposedContract, RepairContext, Scenario } from "./types";
 
 const MODEL_ID = "gemini-4-argon";
@@ -153,14 +152,6 @@ function parsePatch(value: unknown, context: RepairContext): PatchProposal {
   const changedPaths = parseStringList(value.changedPaths, 1, 128, 1);
   if (changedPaths.length !== 1 || changedPaths[0] !== TARGET_PATH || !isTargetOnlyDiff(value.diff)) {
     throw new ModelBridgeError("Google Antigravity proposed a patch outside target/checkout.ts.");
-  }
-  try {
-    const checked = validatePatch(value.diff, context.source);
-    if (checked.changedPaths.length !== 1 || checked.changedPaths[0] !== TARGET_PATH) {
-      throw new Error("proposal changed an unsupported path");
-    }
-  } catch {
-    throw new ModelBridgeError("Google Antigravity returned a diff that does not apply to the exact supplied source.");
   }
   const evidenceIds = parseStringList(value.evidenceIds, 50, 128);
   if (!evidenceIds.every((evidenceId) => context.evidenceIds.includes(evidenceId))) {

@@ -47,6 +47,8 @@ Only `target/checkout.ts` is patchable. Tests, mock payments, observer, harness,
 
 The deployment is intentionally **reviewed fixed-target mode**, not a hardened sandbox. Contract and patch approvals are separate API operations bound to the exact content hash. No arbitrary URL, repository upload, user-supplied command, real purchase, or production deployment is accepted.
 
+Argon proposes the repaired application source; the trusted adapter computes its exact unified diff with `difflib`. This avoids asking a language model to count hunk lines. The model still authors the application change, and the same allowlist, review, compilation, and frozen oracle remain mandatory. The target and simulated provider share a process and OS identity; their separate directly observed files are controlled-fixture cross-checks, not adversarial isolation.
+
 ## What is verified
 
 | Case | Required behavior |

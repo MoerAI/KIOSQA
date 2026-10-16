@@ -5,6 +5,7 @@ import { TEST_IDS, type Run, type SuiteResult } from "../../src/types";
 function suite(): SuiteResult {
   return {
     executionStatus: "completed",
+    processExitCode: 0,
     tests: TEST_IDS.map((id) => ({ id, title: id, status: "passed", durationMs: 1, attachments: [] })),
     expectedTestIds: [...TEST_IDS],
     skippedCount: 0,
@@ -31,12 +32,24 @@ test("baseline reproduction requires failed duplicate assertions and recorded or
   const result = suite();
   expect(classifyBaseline(result)).toBe("not_reproduced");
   result.tests[1].status = "failed";
+  result.processExitCode = 1;
   expect(classifyBaseline(result)).toBe("inconclusive");
   result.tests[1].orderObservation = { source: "runner direct file observer", records: [{}, {}] };
   result.tests[1].paymentObservation = { source: "provider-owned ledger", records: [{}, {}] };
   expect(classifyBaseline(result)).toBe("reproduced");
   result.tests[0].status = "failed";
   expect(classifyBaseline(result)).toBe("inconclusive");
+});
+
+test("process exit and reporter results must agree before any verdict", () => {
+  for (const code of [null, 1, 2, 137]) {
+    const result = suite();
+    result.processExitCode = code;
+    expect(hasCompleteTestSet(result)).toBe(false);
+  }
+  const inconsistent = suite();
+  inconsistent.tests[1].status = "failed";
+  expect(hasCompleteTestSet(inconsistent)).toBe(false);
 });
 
 test("passing browser tests alone cannot establish a verified repair", () => {

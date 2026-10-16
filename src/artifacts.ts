@@ -40,7 +40,8 @@ export async function protectedSnapshot(root: string): Promise<{ files: Record<s
   for (const directory of ["src", "runner", "tests/acceptance", "target"]) {
     paths.push(...await listFiles(join(root, directory)));
   }
-  for (const name of ["package.json", "bun.lock", "tsconfig.json", "playwright.acceptance.config.ts"]) {
+  paths.push(...(await listFiles(join(root, "agents"))).filter((path) => path.endsWith(".py")));
+  for (const name of ["package.json", "bun.lock", "tsconfig.json", "playwright.acceptance.config.ts", "requirements-agent.txt", "Dockerfile"]) {
     paths.push(join(root, name));
   }
   const files: Record<string, string> = {};

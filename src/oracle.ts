@@ -4,6 +4,7 @@ export function hasCompleteTestSet(suite: SuiteResult): boolean {
   const ids = suite.tests.map((test) => test.id);
   return (
     suite.executionStatus === "completed" &&
+    suite.processExitCode === (suite.tests.some((test) => test.status === "failed") ? 1 : 0) &&
     suite.infrastructureErrors.length === 0 &&
     suite.skippedCount === 0 &&
     ids.length === TEST_IDS.length &&

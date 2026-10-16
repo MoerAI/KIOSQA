@@ -1,0 +1,14 @@
+.gcloudignore
+.git
+.omo/
+node_modules/
+.venv/
+.kioskproof/
+.env
+.env.*
+!.env.example
+*.zip
+**/__pycache__/
+**/*.pyc
+playwright-report/
+test-results/

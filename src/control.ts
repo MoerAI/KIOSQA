@@ -15,7 +15,7 @@ const WAITING = new Set<RunPhase>(["awaiting_contract_approval", "baseline_ready
 const LIMITATIONS = [
   "One synthetic kiosk, one duplicate-checkout bug family, and simulated USD amounts only.",
   "Reviewed fixed-target execution with explicit contract and patch approval; not a hardened security sandbox or an autonomous deployment agent.",
-  "Order-store observations are application-writable state cross-checks. The provider ledger is runner-owned, but same-user processes are not an adversarial isolation boundary.",
+  "Order and provider-ledger files are separate, directly observed fixture records. The target and simulated provider share a process and OS identity; this is not adversarial isolation.",
   "Single instance and scenario-lifetime keys only; no distributed durability, process-crash recovery, or retention-expiry claim.",
   "AT-04 lost-response recovery and inconsistent-payload conflict coverage are not claimed.",
   "Passing results are scoped empirical observations, not formal proof or production payment safety.",
@@ -126,7 +126,10 @@ export class ControlPlane {
     run.updatedAt = new Date().toISOString();
     run.events.push({ timestamp: run.updatedAt, phase, message });
     console.info(JSON.stringify({ runId: run.id, phase, message }));
-    if (TERMINAL.has(phase) && this.activeRun === run.id) this.activeRun = undefined;
+    if (TERMINAL.has(phase)) {
+      run.durations.total = Date.now() - Date.parse(run.createdAt);
+      if (this.activeRun === run.id) this.activeRun = undefined;
+    }
   }
 
   private async save(run: Run, durable = false): Promise<void> {
@@ -149,6 +152,7 @@ export class ControlPlane {
   }
 
   private launch(run: Run, phase: RunPhase, message: string, work: () => Promise<void>): void {
+    const started = performance.now();
     this.activeRun = run.id;
     this.event(run, phase, message);
     void (async () => {
@@ -157,6 +161,13 @@ export class ControlPlane {
         await work();
       } catch (error) {
         run.error = error instanceof Error ? error.message : "Unexpected execution failure.";
+        run.durations[phase] = Math.round(performance.now() - started);
+        if (phase === "analyzing" && run.attempts.at(-1)) {
+          const attempt = run.attempts.at(-1)!;
+          attempt.elapsedMs = run.durations[phase];
+          attempt.patchStatus = "rejected";
+          attempt.rejectionReason = run.error;
+        }
         run.executionStatus = /timeout|timed out/i.test(run.error) ? "timed_out" : "infrastructure_error";
         run.verificationStatus = "inconclusive";
         run.verdict = "NOT_VERIFIED";
@@ -279,10 +290,14 @@ export class ControlPlane {
       const started = performance.now();
       const source = await readFile(join(this.directory(run), "workspaces/baseline/target/checkout.ts"), "utf8");
       const supportingSource = await readFile(join(this.directory(run), "workspaces/baseline/target/types.ts"), "utf8");
-      const evidenceIds = run.evidence.filter((item) => item.phase === "before" && ["machine_result", "screenshot"].includes(item.type)).slice(0, 24).map((item) => item.evidenceId);
+      const selectedEvidence = run.evidence.filter((item) => item.phase === "before" && ["machine_result", "screenshot"].includes(item.type)).slice(0, 24);
+      const evidenceIds = selectedEvidence.map((item) => item.evidenceId);
       const diagnosticEvidence = {
         executionStatus: run.baseline!.executionStatus,
         expectedTestIds: run.baseline!.expectedTestIds,
+        catalog: selectedEvidence.map((item) => ({
+          evidenceId: item.evidenceId, type: item.type, path: item.relativeArtifactPath, source: item.source, contentHash: item.contentHash,
+        })),
         tests: run.baseline!.tests.map((test) => ({
           id: test.id,
           status: test.status,
@@ -380,7 +395,12 @@ export class ControlPlane {
       const snapshot = await protectedSnapshot(this.root);
       const storedContract = await readFile(join(this.directory(run), "contract.json"));
       attempt.protectedHashesMatch = snapshot.hash === run.protectedHash && hash(storedContract) === run.contractHash && hash(contractBytes(run)) === run.contractHash;
-      const paths = [...(run.baseline?.artifactPaths ?? []), ...attempt.suite.artifactPaths];
+      const paths = [...new Set([
+        ...(run.baseline?.artifactPaths ?? []), ...attempt.suite.artifactPaths,
+        ...(run.baseline?.tests.flatMap((test) => test.attachments) ?? []),
+        ...attempt.suite.tests.flatMap((test) => test.attachments),
+        run.baseline!.reportPath, run.baseline!.resultPath, attempt.suite.reportPath, attempt.suite.resultPath,
+      ])];
       const readable = paths.length > 0 && (run.baseline?.screenshotPaths.length ?? 0) > 0 && attempt.suite.screenshotPaths.length > 0 &&
         (await Promise.all(paths.map((path) => readableArtifact(this.directory(run), path)))).every(Boolean);
       const verified = canVerify(run, attempt.suite, attempt.protectedHashesMatch, readable);

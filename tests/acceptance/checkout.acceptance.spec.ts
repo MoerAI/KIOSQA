@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import type { Scenario } from "../../src/types.ts";
@@ -116,8 +116,10 @@ test("AT-06 protected-path patch challenge is rejected without execution", async
   ].join("\n");
 
   expect(() => validatePatch(protectedDiff, baselineSource)).toThrow(/Only target\/checkout\.ts may be changed/);
+  const evidencePath = testInfo.outputPath("integrity-check.json");
+  await writeFile(evidencePath, JSON.stringify({ rejectedPath: "tests/acceptance/checkout.acceptance.spec.ts", executed: false }));
   await testInfo.attach("integrity-check", {
-    body: JSON.stringify({ rejectedPath: "tests/acceptance/checkout.acceptance.spec.ts", executed: false }),
+    path: evidencePath,
     contentType: "application/json",
   });
 });

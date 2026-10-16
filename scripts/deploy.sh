@@ -23,7 +23,7 @@ IMAGE="$REGION-docker.pkg.dev/$PROJECT/kioskproof/app:$REVISION"
 
 gcloud projects describe "$PROJECT" --format='value(projectId)'
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
-  secretmanager.googleapis.com storage.googleapis.com --project="$PROJECT"
+  secretmanager.googleapis.com storage.googleapis.com iam.googleapis.com --project="$PROJECT"
 
 if ! gcloud artifacts repositories describe kioskproof --location="$REGION" --project="$PROJECT" >/dev/null 2>&1; then
   gcloud artifacts repositories create kioskproof --repository-format=docker --location="$REGION" --project="$PROJECT"

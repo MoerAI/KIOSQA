@@ -79,6 +79,7 @@ export interface TestResult {
 
 export interface SuiteResult {
   executionStatus: "completed" | "infrastructure_error" | "timed_out" | "cancelled";
+  processExitCode: number | null;
   tests: TestResult[];
   expectedTestIds: string[];
   skippedCount: number;

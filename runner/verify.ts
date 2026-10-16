@@ -78,6 +78,9 @@ export async function runAcceptance(options: RunAcceptanceOptions): Promise<Suit
   if (skippedCount > 0) infrastructureErrors.push(`Acceptance suite reported ${skippedCount} skipped test(s).`);
   validateEvidence(tests, infrastructureErrors);
   validateFailures(tests, infrastructureErrors);
+  if (processResult && processResult.exitCode !== (tests.some((test) => test.status === "failed") ? 1 : 0)) {
+    infrastructureErrors.push(`Playwright exit code ${String(processResult.exitCode)} does not match the recorded test results.`);
+  }
   if (processResult && processResult.exitCode === null && !processResult.signal) {
     infrastructureErrors.push("Playwright did not produce an exit code.");
   }
@@ -101,6 +104,7 @@ export async function runAcceptance(options: RunAcceptanceOptions): Promise<Suit
   const reportPath = join(outputDir, "acceptance-summary.html");
   const suite: SuiteResult = {
     executionStatus,
+    processExitCode: processResult?.exitCode ?? null,
     tests,
     expectedTestIds: EXPECTED_IDS,
     skippedCount,

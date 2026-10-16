@@ -8,6 +8,7 @@ result on stdout. It deliberately exposes neither tools nor model thoughts.
 from __future__ import annotations
 
 import asyncio
+import difflib
 import importlib.metadata
 import json
 import os
@@ -21,6 +22,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from google.antigravity import Agent, Image, LocalAgentConfig
 from google.antigravity.hooks import policy
+from google.antigravity.models import GeminiAPIEndpoint, GeminiModelOptions, ModelTarget, ThinkingLevel
+from google.antigravity.types import AgentBehavior, CapabilitiesConfig
 
 MODEL_ID = "gemini-4-argon"
 SDK_PACKAGE = "google-antigravity"
@@ -72,9 +75,8 @@ class ContractPayload(StrictModel):
         return self
 
 
-class PatchPayload(StrictModel):
+class PatchFields(StrictModel):
     baselineRevision: str = Field(min_length=1, max_length=128)
-    diff: str = Field(min_length=1, max_length=32_768)
     changedPaths: list[Literal["target/checkout.ts"]] = Field(min_length=1, max_length=1)
     rationale: str = Field(min_length=1, max_length=3_000)
     evidenceIds: list[str] = Field(max_length=50)
@@ -89,11 +91,26 @@ class PatchPayload(StrictModel):
             raise ValueError("patch lists must contain bounded non-empty strings")
         return value
 
+
+class PatchPayload(PatchFields):
+    diff: str = Field(min_length=1, max_length=32_768)
+
     @field_validator("diff")
     @classmethod
     def validate_diff_size(cls, value: str) -> str:
         if len(value.encode("utf-8")) > 32_768 or "\x00" in value or "\r" in value:
             raise ValueError("diff must be bounded UTF-8 text with LF line endings")
+        return value
+
+
+class SourceProposal(PatchFields):
+    replacementSource: str = Field(min_length=1, max_length=24_576)
+
+    @field_validator("replacementSource")
+    @classmethod
+    def validate_source(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 24_576 or "\x00" in value or "\r" in value or not value.endswith("\n"):
+            raise ValueError("replacement source must be bounded UTF-8 TypeScript ending in a newline")
         return value
 
 
@@ -250,7 +267,19 @@ def _sdk_version() -> str:
 async def _ask_model(prompt: str, response_schema: type[ResponseModel], attachments: list[Image] | None = None) -> tuple[ResponseModel, ModelMetaPayload]:
     started = time.perf_counter()
     config = LocalAgentConfig(
-        model=MODEL_ID,
+        model=ModelTarget(
+            name=MODEL_ID,
+            endpoint=GeminiAPIEndpoint(options=GeminiModelOptions(
+                thinking_level=ThinkingLevel.LOW,
+                max_output_tokens=8192,
+            )),
+        ),
+        capabilities=CapabilitiesConfig(
+            enabled_tools=[],
+            enable_subagents=False,
+            agent_behavior=AgentBehavior.MINIMAL,
+        ),
+        workspaces=[],
         policies=[policy.deny("*")],
         response_schema=response_schema,
         system_instructions=(
@@ -262,7 +291,9 @@ async def _ask_model(prompt: str, response_schema: type[ResponseModel], attachme
         ),
     )
     async with Agent(config) as agent:
-        content: list[str | Image] = [prompt]
+        content: list[str | Image] = [
+            prompt + "\nReturn JSON satisfying this schema:\n" + json.dumps(response_schema.model_json_schema())
+        ]
         if attachments:
             content.extend(attachments)
         response = await agent.chat(content)
@@ -296,9 +327,9 @@ async def _repair(request: RepairRequest) -> PatchResult:
     images = _load_screenshots(request.screenshotPaths)
     evidence_ids = ", ".join(request.evidenceIds) if request.evidenceIds else "(no evidence IDs supplied)"
     previous_failure = request.previousFailure or "(none)"
-    prompt = f"""Propose one minimal repair for the exact source supplied below. The approved contract is authoritative. You may change only target/checkout.ts and must return a plain unified diff against this exact baseline. Do not modify tests, mocks, configuration, package files, or any other path. This is attempt {request.attemptNumber} of a maximum of two.
+    prompt = f"""Propose one minimal repair for the exact source supplied below. The approved contract is authoritative. You may change only target/checkout.ts. Return its entire repaired contents as replacementSource, ending with a newline. The trusted harness will serialize your proposed source into an exact unified diff for operator review; you must not calculate diff hunk line counts. Do not modify tests, mocks, configuration, package files, or any other path. This is attempt {request.attemptNumber} of a maximum of two.
 
-Your observations must state only facts present in the supplied source/evidence/screenshots. Label uncertainty in hypotheses. Cite only these observed evidence IDs: {evidence_ids}. If no evidence IDs were supplied, use an empty evidenceIds list. Do not claim verification. Do not include hidden reasoning. Ensure every unified-diff hunk header exactly matches its added and removed line counts; do not include a no-newline marker.
+Your observations must state only facts present in the supplied source/evidence/screenshots. Label uncertainty in hypotheses. Cite only these observed evidence IDs: {evidence_ids}. If no evidence IDs were supplied, use an empty evidenceIds list. Do not claim verification. Do not include hidden reasoning.
 
 Policy:\n---\n{request.policyText}\n---\n
 Approved contract JSON:\n{request.contract.model_dump_json(by_alias=True)}
@@ -309,8 +340,15 @@ Exact target/checkout.ts source:\n---\n{request.source}---\n
 Supporting source (read-only context, not patchable):\n---\n{request.supportingSource}\n---\n
 Recorded evidence (read-only):\n---\n{request.evidence}\n---\n
 Previous attempt failure (read-only):\n---\n{previous_failure}\n---\n
-The attached images are runner-supplied screenshots. Return all PatchProposal fields, including changedPaths exactly [\"target/checkout.ts\"]."""
-    data, meta = await _ask_model(prompt, PatchPayload, images)
+The attached images are runner-supplied screenshots. Return all SourceProposal fields, including changedPaths exactly [\"target/checkout.ts\"] and replacementSource, not a diff."""
+    draft, meta = await _ask_model(prompt, SourceProposal, images)
+    diff = "".join(difflib.unified_diff(
+        request.source.splitlines(keepends=True),
+        draft.replacementSource.splitlines(keepends=True),
+        fromfile=f"a/{TARGET_PATH}",
+        tofile=f"b/{TARGET_PATH}",
+    ))
+    data = PatchPayload(**draft.model_dump(exclude={"replacementSource"}), diff=diff)
     if data.baselineRevision != request.baselineRevision:
         raise ValueError("model proposal baseline revision does not match the supplied baseline")
     if data.attemptNumber != request.attemptNumber:

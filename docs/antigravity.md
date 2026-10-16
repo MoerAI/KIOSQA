@@ -20,7 +20,12 @@ environment and is inherited by the SDK bridge, never by the repair target.
 Both `interpretPolicy()` and `proposePatch()` select exactly
 `gemini-4-argon`. There is no alternate model or REST-provider fallback. Every
 agent is created with `policies=[policy.deny("*")]`; no shell, file, browser,
-or custom tools are granted to the model.
+or custom tools are granted to the model. The SDK also removes all builtin
+tools from the model context with `enabled_tools=[]`, disables subagents,
+uses `AgentBehavior.MINIMAL`, and exposes no workspace. The model target
+remains `gemini-4-argon`, with the SDK's verified low-thinking option and an
+8192-token output cap. The response schema is also supplied explicitly so
+typed output does not depend on an exposed finish tool.
 
 The bridge requests a Pydantic `response_schema` from the SDK and validates the
 returned payload with the same strict Pydantic model before it crosses the
@@ -35,7 +40,11 @@ It accepts at most four absolute, non-symlink PNG/JPEG/WebP files, each at most
 5 MiB. Policy, source, supporting source, evidence, IDs, attempt number, and
 screenshot paths are all bounded and schema-checked at the bridge boundary.
 The model sees the exact supplied `target/checkout.ts` source and may propose
-only a plain unified diff for that one path. The bridge rejects an unmatched
+only application source for that one path. Python's deterministic `difflib`
+serializes the model-proposed replacement against the exact baseline into a
+unified diff; Argon is not asked to count hunk lines. The operator still reviews
+and approves that exact diff, and the trusted controller validates and applies it.
+The bridge rejects an unmatched
 baseline, third attempt, uncited/unknown evidence ID, malformed diff, or any
 second path.
 
@@ -65,5 +74,5 @@ selected runtime, whether a key is available to the trusted bridge, and that
 tools are denied. It does not make a model request. In the event environment on
 2026-10-16, `google-antigravity 0.1.22` successfully invoked
 `gemini-4-argon` and returned real token usage; the SDK did not expose an API
-version or conversation ID for that call, so both remain honestly unavailable
-in the corresponding metadata.
+version. Actual policy and repair calls returned conversation IDs and token
+counts, which are recorded without inventing an API version.

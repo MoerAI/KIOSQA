@@ -36,7 +36,7 @@ test("HTTP boundary rejects untrusted actions and unknown resources", async ({ r
 
 test("a populated repair diff remains inside the mobile viewport", async ({ page }, testInfo) => {
   const suite: SuiteResult = {
-    executionStatus: "completed", expectedTestIds: [...TEST_IDS], skippedCount: 0,
+    executionStatus: "completed", processExitCode: 0, expectedTestIds: [...TEST_IDS], skippedCount: 0,
     infrastructureErrors: [], elapsedMs: 100, reportPath: "", resultPath: "",
     screenshotPaths: [], artifactPaths: [],
     tests: TEST_IDS.map((id) => ({ id, title: id, status: "passed", durationMs: 1, attachments: [] })),
