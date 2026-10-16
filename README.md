@@ -4,7 +4,22 @@
 
 Evidence-first kiosk repair built with **Google Antigravity and Gemini 4 Argon** for the Google DeepMind hackathon on October 16, 2026. Antigravity interprets an operating rule and gives Argon real screenshots, request history, observed state, and bounded source. Argon proposes an application diff. An unchanged Playwright suite, not the model, determines the result.
 
-Recorded Cloud Run workbench URL (used by the October 16, 2026 evidence run; current reachability is not asserted): `https://kioskproof-129147568500.asia-northeast3.run.app`
+Observed Cloud Run deployments from October 16, 2026 (current availability is not
+asserted):
+
+- Primary public workbench: `https://kioskproof-129147568500.asia-northeast3.run.app`.
+  It intentionally retains an old, unowned review run awaiting a patch; it is not
+  the final verification result.
+- Isolated QA workbench: `https://kioskproof-qa-129147568500.asia-northeast3.run.app`.
+  This is where final run `d7dcc898-76a4-4de0-8999-f0b99a11ff70` was observed.
+
+See `docs/verification.md` for the dated evidence and return paths.
+
+The finished **English-language film** is
+`videos/kioskproof-ir/renders/kioskproof-ir-intro-plus-demo.mp4`: a 60-second
+HyperFrames product introduction followed by the entire 72-second real Cloud
+browser demonstration. Its sources and reproduction command are in
+`videos/kioskproof-ir/BRIEF.md` and `docs/demo.md`.
 
 This repository implements the P0 synthetic duplicate-checkout scenario in `KioskProof-PRD.md`. The supplied PRD and research remain design/research records; measured implementation results belong in `docs/verification.md` and exported run manifests.
 
@@ -94,7 +109,8 @@ The rehearsal subscribes to server-sent run events before each action; it does n
 For a new English UI recording, run `bun scripts/record-demo.ts` with
 `KIOSKPROOF_URL` set to a deployment you have confirmed is reachable. The recorder
 labels simulated operator actions and waits for the final durable-export event. The
-repository's historical Cloud Run endpoint is recorded above; see `docs/demo.md`.
+isolated QA endpoint observed for the final recording is recorded above; see
+`docs/demo.md`.
 
 ## Google Cloud
 
@@ -109,7 +125,13 @@ bash scripts/deploy.sh ~/.config/gdm-hackathon/h2gdm-hack26icn-2705.env
 
 The script creates a dedicated runtime identity, grants it access to its secret and evidence bucket, and deploys one Cloud Run instance with always-allocated CPU. Background model and browser tasks must continue between HTTP requests. The service is public for the event demo; approvals and synthetic-target restrictions still apply. The script uses the key on stdin to Secret Manager, never in image layers, Git, command-line arguments, or browser storage.
 
-The event API key alone does **not** grant Cloud Run deployment permission. A Cloud project access failure is a deployment blocker, not a reason to claim a live Cloud URL. `docs/verification.md` and `.kioskproof/cloud-backup/runs/41a794ce-6500-4570-b421-4e510e075a72/` retain the dated deployment evidence; neither asserts that the recorded URL is currently available.
+The event API key alone does **not** grant Cloud Run deployment permission. A Cloud
+project access failure is a deployment blocker, not a reason to claim a live Cloud
+URL. `docs/verification.md` and
+`.kioskproof/cloud-demo-backup/runs/d7dcc898-76a4-4de0-8999-f0b99a11ff70/`
+retain the dated final-run evidence; neither asserts that a recorded URL is
+currently available. The primary URL above deliberately remains an old unowned
+awaiting-patch review run.
 
 The public readiness endpoint is `/health`. Cloud Run reserves some URL paths
 ending in `z`; the deployed smoke test must not use `/healthz`.
@@ -120,8 +142,8 @@ Export event data before project deletion:
 
 ```bash
 gcloud storage rsync --recursive \
-  gs://h2gdm-hack26icn-2705-kioskproof-evidence \
-  .kioskproof/cloud-backup --project=h2gdm-hack26icn-2705
+  gs://h2gdm-hack26icn-2705-kioskproof-demo-e11cbae \
+  .kioskproof/cloud-demo-backup --project=h2gdm-hack26icn-2705
 ```
 
 ## Source map
@@ -134,4 +156,6 @@ gcloud storage rsync --recursive \
 - `src/ui.ts`, `public/`: server-rendered responsive evidence workbench.
 - `src/artifacts.ts`: reports, checksums, and durable Cloud evidence.
 
-All code commits are authored and committed solely as **MoerAI**. Dependency attribution is in `NOTICE`. The supplied research ZIP is retained as input, not confused with new KioskProof execution evidence.
+Final deployment source commit `2e5b038` was committed and pushed by its sole
+author, **MoerAI**. Dependency attribution is in `NOTICE`. The supplied research
+ZIP is retained as input, not confused with new KioskProof execution evidence.

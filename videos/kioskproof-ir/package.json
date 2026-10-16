@@ -1,0 +1,11 @@
+{
+  "name": "kioskproof-ir",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:film": "node scripts/validate-film.mjs",
+    "hyperframes:check": "npx --yes hyperframes@0.8.36 check",
+    "hyperframes:preview": "npx --yes hyperframes@0.8.36 preview",
+    "hyperframes:render": "npx --yes hyperframes@0.8.36 render"
+  }
+}

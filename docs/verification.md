@@ -72,47 +72,43 @@ Original and candidate results, screenshots, videos, native Playwright reports,
 patches, model receipts, and protected hashes are retained under
 `.kioskproof/runs/<run-id>/`. Each run has `report.md` and `manifest.json`.
 
-## Recorded Cloud Run browser demonstration
+## Final Cloud Run browser demonstration
 
-Repository evidence records run `41a794ce-6500-4570-b421-4e510e075a72` as an
-actual public Cloud Run UI run, not a mock or local replay. This is a historical
-October 16, 2026 result, not a claim that the endpoint remains online. Parameters
-were 800 ms and two repeated actions.
+The final observed browser run was genuine Cloud Run UI execution on the isolated
+QA workbench, not a mock or local replay:
+`https://kioskproof-qa-129147568500.asia-northeast3.run.app`. Run
+`d7dcc898-76a4-4de0-8999-f0b99a11ff70` used an 800 ms delay and two repeated
+actions. Its actual enum verdict is `VERIFIED_IN_SCOPE`.
 
 Primary evidence is retained in
-`.kioskproof/cloud-backup/runs/41a794ce-6500-4570-b421-4e510e075a72/run.json`,
-with the matching `manifest.json` and `report.md` alongside it. The run record is
-`VERIFIED_IN_SCOPE`, records GCS storage in
-`h2gdm-hack26icn-2705-kioskproof-evidence`, and contains 202 evidence entries.
+`.kioskproof/cloud-demo-backup/runs/d7dcc898-76a4-4de0-8999-f0b99a11ff70/run.json`,
+with matching `manifest.json` and `report.md`. The run manifest records a
+reproduced baseline, passed verification, Google Antigravity with
+`gemini-4-argon`, 202 evidence entries, and matching protected hashes. Evidence
+storage is GCS bucket `h2gdm-hack26icn-2705-kioskproof-demo-e11cbae`.
 
-- Backend run time: **89.600 seconds**, meeting the 120-second target for this
-  one sample.
-- Automated browser workflow: **98.582 seconds**.
-- Actual WebM duration measured with `ffprobe`: **99.520 seconds**, meeting the
-  180-second recorded-demonstration target.
-- Argon repair call: **55.612 seconds**, 29,550 reported total tokens,
-  conversation `da6da00cf4156e3fc69cd3e9cabfdbdc`.
-- Baseline AT-02 and AT-03 each observed two orders and two charges. Both
-  candidate cases observed one order and one charge.
-- AT-01, AT-02, AT-03, AT-05, and AT-06 all passed; protected hashes were
-  unchanged. AT-05 observed two legitimate distinct-intent purchases.
-- All 202 evidence entries were captured, with storage mode `gcs`, bucket
-  `h2gdm-hack26icn-2705-kioskproof-evidence`, and no export error.
-- Contract and patch approvals were explicitly `qa_driver`, not human review.
-  The video also labels itself as a recorded QA demonstration.
+- The baseline AT-02 and AT-03 each failed with two orders and two simulated
+  charges. After repair, AT-01, AT-02, AT-03, AT-05, and AT-06 all passed;
+  AT-02 and AT-03 each had one order and one simulated charge, while new-intent
+  AT-05 had two legitimate purchases.
+- Contract and patch approvals are recorded as actor `qa_driver` (simulated),
+  not literal human review.
+- The real browser recording is
+  `.kioskproof/demo/2026-10-16T06-22-00-803Z/kioskproof-demo.webm`. `ffprobe`
+  reports 72.000 seconds, 1440x1000 VP9, at 25 fps. The paired recorder capture
+  is `recorded-run.json` in the same directory.
 
-The genuine recording and screenshots are in
-`.kioskproof/demo/2026-10-16T04-29-44-023Z/`; the video is
-`kioskproof-demo.webm` (9,328,745 bytes). `recorded-run.json` contains the actual
-run, not a manually assembled result. The recorder subscribed before patch
-approval and awaited the server's final export event.
+The final source was commit `2e5b038`, committed and pushed by its sole author,
+MoerAI. Cloud Build `d2960346-3c94-47f6-96a4-6753e531e511` reported `SUCCESS`. Image
+digest `sha256:ddd34299b8ef43de6bc2612cbb9c51fd5c0f19740954ebcc702687da58aa7aeb`
+was verified on both the primary and isolated QA deployments.
 
-This is one measured Cloud demonstration, not a latency guarantee.
-
-The repository's Cloud-evidence backup contains 213 files under
-`.kioskproof/cloud-backup/`. The downloaded contract, application patch, and
-protected-suite manifest hashes match the verified Cloud run. The recording and
-this local backup survive deletion of the event project.
+The primary public workbench,
+`https://kioskproof-129147568500.asia-northeast3.run.app`, deliberately retains
+an old, unowned review run awaiting a patch. Preserve it; do not treat it as the
+final result. These are dated observations, not current-availability or latency
+guarantees. The target remains synthetic and fixed, with simulated charges; this
+is neither a real-payment test nor a formal proof.
 
 ## Earlier failures are retained
 
@@ -134,29 +130,41 @@ success rate.
 ## Automated and deployment checks
 
 - TypeScript type checking passed.
-- Twenty Bun unit tests passed in one run.
+- Twenty-five Bun unit tests passed in one run.
 - Six desktop/mobile browser checks passed, including the populated patch
   viewport regression and HTTP action boundaries.
 - Python language-server diagnostics passed for the bridge.
 - The actual Linux amd64 container built successfully, imported the pinned SDK,
   and reported the configured Argon runtime.
-- GitHub Actions passed for `ee1f56f` (run `38846691147`) and `47870e1`
-  (run `38849013915`).
-- Cloud Build `21e4c73b-3175-4bcf-8a6b-e36461f1d8b7` succeeded in 3m34s.
-  Cloud Run revision `kioskproof-00001-m75` became ready and served the real
-  application home and run API with HTTP 200.
+- GitHub Actions passed for `ee1f56f` (run `38846691147`), `47870e1`
+  (run `38849013915`), `6433f95` (run `38857871794`), and the final UI fix
+  `2e5b038` (run `38860208583`).
+- Cloud Build `d2960346-3c94-47f6-96a4-6753e531e511` reported `SUCCESS`. Its image
+  digest, `sha256:ddd34299b8ef43de6bc2612cbb9c51fd5c0f19740954ebcc702687da58aa7aeb`,
+  was verified on the primary and isolated QA deployments.
 
 The initial deployment smoke check used `/healthz`, which Cloud Run reserves;
 Google's front end returned 404 without an application request log. The code
 now uses `/health`. The actual home and `/api/runs` were already working; the
 404 was not treated as proof of an application failure or successful repair.
 
+The final 132-second English film is
+`videos/kioskproof-ir/renders/kioskproof-ir-intro-plus-demo.mp4`. HyperFrames
+0.8.36 strict rendering succeeded after its composition lint reached zero errors
+and zero warnings. `npm run check:film` passed for the 60+72-second timeline,
+English scene markup, final source SHA-256 hashes, and ffprobe-derived full
+browser recording duration. This checks the film sources and timing; the
+underlying protected checkout verdict remains the run evidence above.
+
 The historical project record is `h2gdm-hack26icn-2705` in
-`asia-northeast3`. Its recorded public workbench endpoint is
-`https://kioskproof-129147568500.asia-northeast3.run.app`; confirm reachability
-before using it, because this repository makes no current live-service claim.
-Credentials are not evidence locations. API keys stay in Secret Manager and the
-server environment, not the image, Git, browser, or exported evidence.
+`asia-northeast3`. Its primary public workbench,
+`https://kioskproof-129147568500.asia-northeast3.run.app`, intentionally retains
+an old, unowned review run awaiting a patch. The isolated QA workbench,
+`https://kioskproof-qa-129147568500.asia-northeast3.run.app`, is the dated final
+observation. Confirm reachability before using either URL, because this repository
+makes no current live-service claim. Credentials are not evidence locations. API
+keys stay in Secret Manager and the server environment, not the image, Git,
+browser, or exported evidence.
 
 ## Explicit limitations
 

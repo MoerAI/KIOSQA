@@ -1,0 +1,49 @@
+{
+  "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+  "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
+  "paths": {
+    "blocks": "compositions",
+    "components": "compositions/components",
+    "assets": "assets"
+  },
+  "media": {
+    "autoProxy": false
+  },
+  "authoringSkill": "product-launch-video",
+  "timelinePlan": {
+    "assembly": "continuous-intro-then-full-demo",
+    "intro": {
+      "startSeconds": 0,
+      "durationSeconds": 60,
+      "sceneCount": 6,
+      "source": "STORYBOARD.md"
+    },
+    "demoClip": {
+      "track": "video",
+      "startSeconds": 60,
+      "src": "assets/cloud-recording.webm",
+      "sourceStartSeconds": 0,
+      "playbackRate": 1,
+      "duration": "ffprobe-derived-full-source-duration",
+      "end": "60s + ffprobe(assets/cloud-recording.webm)"
+    }
+  },
+  "audioPlan": {
+    "introBgmCandidate": {
+      "enabled": false,
+      "source": "../../../AISTORY/videos/aiyagi-ir/.media/audio/bgm/bgm_001.mp3",
+      "title": "Life of Riley",
+      "artist": "Kevin MacLeod",
+      "license": "CC BY 4.0",
+      "range": "0s–60s only",
+      "fadeOut": "57s–60s to silence",
+      "credit": "Life of Riley — Kevin MacLeod · incompetech.com · CC BY 4.0 · edited excerpt",
+      "enableOnlyWhen": "restrained mix review finds the playful mood compatible with the sober evidence/IR introduction"
+    },
+    "demoAudio": {
+      "startSeconds": 60,
+      "source": "embedded in assets/cloud-recording.webm",
+      "policy": "preserve full recorded audio timing; preserve silence if absent; no BGM overlay"
+    }
+  }
+}

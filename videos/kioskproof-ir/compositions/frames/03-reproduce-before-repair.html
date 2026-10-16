@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <script src="assets/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "NanumSquareRoundB";
+      src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+      font-weight: 700;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "SFMono-Regular";
+      src: local("SF Mono");
+    }
+
+    :root {
+      --canvas: #f7f6f9;
+      --surface: #ffffff;
+      --ink: #261f32;
+      --muted: #685f76;
+      --border: #e5e1ec;
+      --violet: #7844df;
+      --violet-pale: #b393ff;
+      --failed: #c24657;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    #frame-03 {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "NanumSquareRoundB", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 700;
+    }
+
+    .clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: var(--canvas);
+    }
+
+    .rail {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 22px;
+      height: 100%;
+      background: #20182d;
+      transform-origin: top;
+      transform: scaleY(0);
+    }
+
+    .sequence {
+      position: absolute;
+      left: 100px;
+      top: 106px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      opacity: 0;
+    }
+
+    .sequence::before {
+      width: 48px;
+      height: 2px;
+      background: var(--violet-pale);
+      content: "";
+    }
+
+    .intro-copy {
+      position: absolute;
+      left: 100px;
+      top: 163px;
+      width: 650px;
+      opacity: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -0.065em;
+      line-height: 1.03;
+      word-break: keep-all;
+    }
+
+    .intro-context {
+      margin: 27px 0 0;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      line-height: 1.4;
+    }
+
+    .evidence-window {
+      position: absolute;
+      left: 830px;
+      top: 132px;
+      width: 990px;
+      height: 700px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px #211b3510;
+      opacity: 0;
+    }
+
+    .evidence-source {
+      position: absolute;
+      left: -220px;
+      top: -1650px;
+      display: block;
+      width: 1440px;
+      height: auto;
+      max-width: none;
+    }
+
+
+    .plate-label {
+      position: absolute;
+      left: 830px;
+      top: 850px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.10em;
+      line-height: 1;
+      opacity: 0;
+    }
+
+    .plate-label::before {
+      width: 20px;
+      height: 1px;
+      background: var(--violet);
+      content: "";
+    }
+
+    .observation {
+      position: absolute;
+      left: 100px;
+      top: 458px;
+      width: 610px;
+      opacity: 0;
+    }
+
+    .observation-label {
+      margin-bottom: 17px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 0.13em;
+      line-height: 1;
+    }
+
+    .observation-line {
+      display: flex;
+      align-items: baseline;
+      gap: 28px;
+      padding: 15px 0 16px;
+      border-top: 1px solid var(--border);
+      font-size: 25px;
+      letter-spacing: -0.035em;
+      line-height: 1;
+    }
+
+    .failure-id,
+    .failure-count {
+      color: var(--failed);
+    }
+
+    .failure-id {
+      width: 162px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 19px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .observation-copy {
+      color: var(--ink);
+    }
+
+    .observation-line .observation-copy:last-child {
+      margin-left: auto;
+    }
+
+    .failure-count {
+      margin-left: 8px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 31px;
+      font-weight: 400;
+      letter-spacing: -0.04em;
+    }
+
+    .final-copy {
+      position: absolute;
+      left: 100px;
+      top: 706px;
+      width: 640px;
+      opacity: 0;
+    }
+
+    .final-copy p {
+      margin: 0;
+      font-size: 46px;
+      letter-spacing: -0.055em;
+      line-height: 1.13;
+      word-break: keep-all;
+    }
+
+    .final-copy small {
+      display: block;
+      margin-top: 22px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 0.10em;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div
+    id="frame-03"
+    data-composition-id="frame-03"
+    data-start="0"
+    data-duration="11"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="clip" aria-hidden="true">
+      <div class="rail" id="f3-rail"></div>
+    </div>
+
+    <div class="sequence" id="f3-sequence">03 / REPRODUCE THE BASELINE</div>
+
+    <div class="intro-copy" id="f3-intro-copy">
+      <h1>Reproduce the<br>failure first.</h1>
+      <p class="intro-context">observed baseline · repair run d7dcc898</p>
+    </div>
+
+    <div class="evidence-window" id="f3-evidence-window">
+      <img
+        class="evidence-source"
+        id="f3-evidence-source"
+        src="assets/final-before.png"
+        alt="Actual before-repair KioskProof screen: AT-02 and AT-03 failed with two orders and two simulated charges."
+      >
+
+    </div>
+    <div class="plate-label" id="f3-plate-label">BEFORE REPAIR · SOURCE PLATE</div>
+
+    <div class="observation" id="f3-observation">
+      <div class="observation-label">OBSERVED BEFORE REPAIR</div>
+      <div class="observation-line">
+        <span class="failure-id">AT-02 / AT-03</span>
+        <span class="observation-copy">Failed</span>
+      </div>
+      <div class="observation-line">
+        <span class="observation-copy">Orders <span class="failure-count">2</span></span>
+        <span class="observation-copy">Simulated charges <span class="failure-count">2</span></span>
+      </div>
+    </div>
+
+    <div class="final-copy" id="f3-final-copy">
+      <p>A baseline makes<br>the fix measurable.</p>
+      <small>BEFORE REPAIR · AT-02 / AT-03</small>
+    </div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    const timeline = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+
+    timeline.to("#f3-rail", { scaleY: 1, duration: 0.45 }, 0);
+    timeline.to("#f3-evidence-window", { autoAlpha: 1, y: 0, duration: 0.55 }, 0);
+    timeline.to("#f3-sequence", { autoAlpha: 1, y: 0, duration: 0.35 }, 0.10);
+    timeline.to("#f3-intro-copy", { autoAlpha: 1, y: 0, duration: 0.55 }, 0.32);
+
+    timeline.to(
+      "#f3-evidence-source",
+      { scale: 1660 / 1440, x: -109, y: -560, duration: 0.78, ease: "power3.inOut" },
+      2.50
+    );
+    timeline.to("#f3-observation", { autoAlpha: 1, y: 0, duration: 0.48 }, 2.82);
+
+    timeline.to("#f3-final-copy", { autoAlpha: 1, y: 0, duration: 0.55 }, 6.50);
+    timeline.to("#f3-plate-label", { autoAlpha: 1, y: 0, duration: 0.40 }, 7.00);
+
+    timeline.to({}, { duration: 11 }, 0);
+    window.__timelines["frame-03"] = timeline;
+  </script>
+</body>
+</html>

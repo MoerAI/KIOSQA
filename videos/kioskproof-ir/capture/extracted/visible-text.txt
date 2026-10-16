@@ -1,0 +1,15 @@
+HISTORICAL UNUSED CAPTURE — run 41a794ce; final film sources are final-*.png and cloud-recording.webm from run d7dcc898.
+KioskProof
+Evidence-first repair
+Fix the app.
+Keep the proof.
+A kiosk rule becomes a frozen regression.
+Antigravity investigates. Argon proposes. Evidence decides.
+
+POL-001: For one purchase intent, concurrent duplicate delivery of an identical checkout request must create exactly one order and one simulated charge within five seconds after the controlled provider barrier is released. A new purchase intent must still create a new order.
+
+The same input. The same protected acceptance suite.
+Single-instance synthetic checkout. No real payments. AT-04 lost-response recovery is outside this claim.
+
+Verified run 41a794ce-6500-4570-b421-4e510e075a72:
+AT-01, AT-02, AT-03, AT-05 and AT-06 passed after an approved application-only patch.

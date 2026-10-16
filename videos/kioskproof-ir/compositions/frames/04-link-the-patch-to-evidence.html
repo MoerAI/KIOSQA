@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <script src="assets/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "NanumSquareRoundB";
+      src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 700;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "SFMono-Regular";
+      src: local("SF Mono");
+    }
+
+    :root {
+      --canvas: #f7f6f9;
+      --surface: #ffffff;
+      --ink: #261f32;
+      --muted: #685f76;
+      --border: #e5e1ec;
+      --plum: #20182d;
+      --violet: #7844df;
+      --violet-pale: #b393ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    #frame-04 {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "NanumSquareRoundB", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 700;
+    }
+
+    .clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .rail {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 22px;
+      background: var(--plum);
+      transform: scaleY(0);
+      transform-origin: top;
+    }
+
+    .sequence {
+      position: absolute;
+      top: 106px;
+      left: 100px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      line-height: 1;
+    }
+
+    .sequence::before,
+    .section-label::before {
+      display: block;
+      width: 48px;
+      height: 2px;
+      background: var(--violet-pale);
+      content: "";
+    }
+
+    .intro-copy {
+      position: absolute;
+      top: 168px;
+      left: 100px;
+      width: 580px;
+      word-break: keep-all;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -0.065em;
+      line-height: 1.03;
+    }
+
+    h1 strong { color: var(--violet); }
+
+    .intro-context {
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      line-height: 1.45;
+    }
+
+    .evidence-column {
+      position: absolute;
+      top: 104px;
+      left: 734px;
+      width: 1086px;
+    }
+
+    .evidence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 34px;
+      padding: 0 2px 13px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.09em;
+      line-height: 1;
+    }
+
+    .source-id { color: var(--violet); }
+
+    .evidence-window {
+      position: relative;
+      width: 1086px;
+      height: 704px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px #211b3510;
+    }
+
+    /* One real source plate; only its crop changes during the review. */
+    .evidence-source {
+      position: absolute;
+      top: -1058px;
+      left: -244px;
+      display: block;
+      width: 1355px;
+      max-width: none;
+      height: auto;
+      transform-origin: top left;
+    }
+
+    .readout-track {
+      display: flex;
+      align-items: center;
+      gap: 19px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.11em;
+      line-height: 1;
+    }
+
+    .readout {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .readout::before {
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--violet-pale);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .readout:last-child { color: var(--violet); }
+    .readout:last-child::before { background: var(--violet); }
+
+    .thesis {
+      position: absolute;
+      top: 603px;
+      left: 100px;
+      width: 570px;
+      word-break: keep-all;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      line-height: 1;
+    }
+
+    .thesis p {
+      margin: 0;
+      font-size: 47px;
+      letter-spacing: -0.06em;
+      line-height: 1.15;
+    }
+
+    .scope-card {
+      position: absolute;
+      top: 769px;
+      left: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      min-width: 432px;
+      padding: 16px 18px 17px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px #211b3508;
+    }
+
+    .scope-title {
+      color: var(--violet);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    .scope-detail {
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      line-height: 1.25;
+    }
+
+    .inert {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div
+    id="frame-04"
+    data-composition-id="frame-04"
+    data-start="0"
+    data-duration="12"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="clip" aria-hidden="true"><div class="rail" id="f4-rail"></div></div>
+
+    <div class="sequence" id="f4-sequence">04 / LINK THE PATCH TO EVIDENCE</div>
+
+    <div class="intro-copy" id="f4-intro-copy">
+      <h1>Trace the<br><strong>evidence.</strong></h1>
+      <p class="intro-context">repair run d7dcc898 · Gemini 4 Argon diagnosis</p>
+    </div>
+
+    <div class="evidence-column" id="f4-evidence-column">
+      <div class="evidence-header">
+        <span>ACTUAL REPAIR WORKSPACE</span>
+        <span class="source-id">RUN d7dcc898</span>
+      </div>
+      <div class="evidence-window" id="f4-evidence-window">
+        <img
+          class="evidence-source"
+          id="f4-evidence-source"
+          src="assets/final-patch.png"
+          alt="Actual KioskProof workspace showing the Gemini 4 Argon diagnosis, patch diff, and approval control for run d7dcc898."
+        >
+      </div>
+      <div class="readout-track" aria-label="Review sequence">
+        <span class="readout" id="f4-observed">OBSERVED</span>
+        <span class="readout" id="f4-proposal">PROPOSAL</span>
+        <span class="readout" id="f4-approval">APPROVAL</span>
+      </div>
+    </div>
+
+    <div class="thesis" id="f4-thesis">
+      <div class="section-label">REVIEW BOUNDARY</div>
+      <p>Review only changes<br>linked to evidence.</p>
+    </div>
+
+    <div class="scope-card" id="f4-scope-card">
+      <span class="scope-title">application-only patch</span>
+      <span class="scope-detail">APPROVAL · QA_driver (simulated)</span>
+    </div>
+
+    <span class="inert" id="f4-inert" aria-hidden="true"></span>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+
+    const root = document.querySelector('[data-composition-id="frame-04"]');
+    const compositionId = root.dataset.compositionId;
+
+    // Every state is defined before the timeline so any host seek is repeatable.
+    gsap.set("#f4-evidence-column", { autoAlpha: 0, y: 20 });
+    gsap.set("#f4-sequence", { autoAlpha: 0, y: 12 });
+    gsap.set("#f4-intro-copy", { autoAlpha: 0, y: 28 });
+    gsap.set(["#f4-observed", "#f4-proposal", "#f4-approval"], { autoAlpha: 0, y: 8 });
+    gsap.set("#f4-thesis", { autoAlpha: 0, y: 22 });
+    gsap.set("#f4-scope-card", { autoAlpha: 0, y: 16 });
+    gsap.set("#f4-evidence-source", { scale: 1, x: 0, y: 0 });
+
+    const timeline = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+
+    // The invisible span keeps the composition's duration exact while preserving the final hold.
+    timeline.to("#f4-inert", { opacity: 0, duration: 12, ease: "none" }, 0);
+
+    timeline.to("#f4-rail", { scaleY: 1, duration: 0.35 }, 0);
+    timeline.to("#f4-evidence-column", { autoAlpha: 1, y: 0, duration: 0.55 }, 0.08);
+    timeline.to("#f4-sequence", { autoAlpha: 1, y: 0, duration: 0.35 }, 0.12);
+    timeline.to("#f4-intro-copy", { autoAlpha: 1, y: 0, duration: 0.55 }, 0.32);
+
+    // 3–7s: one source plate reads Observed first, then the recorded hypotheses/proposal.
+    timeline.to(
+      "#f4-evidence-source",
+      { scale: 1540 / 1355, x: -106, y: -292, duration: 0.78, ease: "power3.inOut" },
+      3.0
+    );
+    timeline.to("#f4-observed", { autoAlpha: 1, y: 0, duration: 0.34 }, 3.12);
+    timeline.to(
+      "#f4-evidence-source",
+      { y: -567, duration: 0.72, ease: "power3.inOut" },
+      4.20
+    );
+    timeline.to("#f4-proposal", { autoAlpha: 1, y: 0, duration: 0.34 }, 4.48);
+    timeline.to("#f4-approval", { autoAlpha: 1, y: 0, duration: 0.34 }, 5.65);
+
+    // 7–10s: return to the full bounded diff and the real approval control.
+    timeline.to(
+      "#f4-evidence-source",
+      { scale: 1250 / 1355, x: 19, y: -148, duration: 0.82, ease: "power3.inOut" },
+      7.0
+    );
+    timeline.to("#f4-thesis", { autoAlpha: 1, y: 0, duration: 0.55 }, 7.18);
+    timeline.to("#f4-scope-card", { autoAlpha: 1, y: 0, duration: 0.48 }, 7.48);
+
+    window.__timelines[compositionId] = timeline;
+    timeline.seek(0).pause();
+  </script>
+</body>
+</html>

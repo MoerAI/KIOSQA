@@ -1,0 +1,77 @@
+{
+  "historicalRunId": "41a794ce-6500-4570-b421-4e510e075a72",
+  "recordedAt": "2026-10-16",
+  "historicalUiCommit": "6433f95d0ad6f75ab337993dec0da01ef14ef452",
+  "scope": "reviewed fixed-target synthetic checkout; not a payment-safety or formal-verification claim",
+  "finalUiCommit": "2e5b03896924652ab39c1421a2e61eb94f806989",
+  "finalRunId": "d7dcc898-76a4-4de0-8999-f0b99a11ff70",
+  "finalRecording": {
+    "path": "assets/cloud-recording.webm",
+    "sha256": "b6457cbc3c4e1a0881cfc5e91f0924c49a7367cf191af0d7a680453ee6651f44",
+    "durationSeconds": 72,
+    "source": ".kioskproof/demo/2026-10-16T06-22-00-803Z/kioskproof-demo.webm"
+  },
+  "finalPlates": [
+    {
+      "path": "assets/final-contract.png",
+      "sha256": "219a6895e0c87b196c8b33dd68b10d4099837b9924e75938e389bdc857db2d4b"
+    },
+    {
+      "path": "assets/final-before.png",
+      "sha256": "9a0fbedadd05e9a0bf1c969c6ec18adc0ea437609086ba9cd00e8d185ab993cf"
+    },
+    {
+      "path": "assets/final-patch.png",
+      "sha256": "8b42df3b78f199a56a1d10562b46084ab02e81911ddc2fab61d1ad77ba5f5955"
+    },
+    {
+      "path": "assets/final-verified.png",
+      "sha256": "0fb8d5bb31e7d354f472a914eb90049f0b06f2dea797af8a0e246ceec9bc37fa"
+    }
+  ],
+  "historicalUnusedFiles": [
+    {
+      "path": "assets/kioskproof-demo-2026-10-16.webm",
+      "sha256": "9dc6e6fa164cec77d66dcd5870f7633a0c722946d2f991196a9bc01a7cd71beb",
+      "source": ".kioskproof/demo/2026-10-16T04-29-44-023Z/kioskproof-demo.webm",
+      "media": "1440x1000 VP9, 99.52s",
+      "scenes": [1, 2, 3, 4, 5, 6],
+      "use": "Real UI source plate within a newly composed scene; never recut as the film backbone. Supersede only with reviewed post-deploy GCP capture from 6433f95 or a documented successor."
+    },
+    {
+      "path": "assets/contract-initial-2026-10-16.png",
+      "sha256": "38b7d40fad2f3d6b1a4f32b6e7b43b794ae2c6ea129664bc7f33ac16f80dd5a5",
+      "source": ".kioskproof/demo/2026-10-16T04-29-44-023Z/contract.png",
+      "scenes": [2],
+      "use": "Actual pre-approval policy contract."
+    },
+    {
+      "path": "assets/before-baseline-2026-10-16.png",
+      "sha256": "140ff4ffb3f52015f92338c5700524c9a7136cea3d8bc997bd7e69f456798888",
+      "source": ".kioskproof/demo/2026-10-16T04-29-44-023Z/before.png",
+      "scenes": [3],
+      "use": "Observed before-repair failure only."
+    },
+    {
+      "path": "assets/argon-patch-2026-10-16.png",
+      "sha256": "45707d90a5d4d8a0acaeaeb4ad836d8f8eb63a2bb206f7045995cf62f1997ee8",
+      "source": ".kioskproof/demo/2026-10-16T04-29-44-023Z/argon-patch.png",
+      "scenes": [4],
+      "use": "Evidence-linked diagnosis, bounded patch proposal and approval state."
+    },
+    {
+      "path": "assets/verified-run-41a794ce.png",
+      "sha256": "53e21b35f120dc5710199fa9ff0fae823a0a5935e9ef7ffe72c014146a4fe764",
+      "source": ".kioskproof/demo/2026-10-16T04-29-44-023Z/verified.png",
+      "scenes": [1, 5, 6],
+      "use": "Completed verified-in-scope run and visible scope limitation."
+    },
+    {
+      "path": "assets/duplicate-ui-pass-AT-02.png",
+      "sha256": "09f936e0003e10567b81dbc668dc2aef48c408690cb13107cfbd16a81827bca5",
+      "source": ".kioskproof/cloud-backup/runs/41a794ce-6500-4570-b421-4e510e075a72/after-1/test-results/checkout.acceptance-AT-02--cf189-es-one-checkout-side-effect/test-finished-1.png",
+      "scenes": [5],
+      "use": "AT-02 repeated UI action result; simulated-payment fixture only."
+    }
+  ]
+}

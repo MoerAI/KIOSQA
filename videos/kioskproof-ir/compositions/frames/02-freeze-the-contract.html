@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "NanumSquareRoundB";
+        src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "SFMono-Regular";
+        src: local("SF Mono");
+      }
+
+      * { box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; margin: 0; overflow: hidden; }
+      body {
+        background: #f7f6f9;
+        color: #261f32;
+        font-family: "NanumSquareRoundB", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #frame-02 {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f7f6f9;
+      }
+
+      .ground {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, #eeebf4 0, #eeebf4 1px, transparent 1px, transparent 100%) 102px 0 / 1px 100%,
+          #f7f6f9;
+      }
+
+      .top-rule {
+        position: absolute;
+        left: 100px;
+        top: 104px;
+        width: 48px;
+        height: 2px;
+        background: #a076ed;
+      }
+
+      .eyebrow {
+        position: absolute;
+        left: 166px;
+        top: 93px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.12em;
+      }
+
+      .headline {
+        position: absolute;
+        left: 100px;
+        top: 153px;
+        width: 550px;
+        margin: 0;
+        color: #261f32;
+        font-size: 72px;
+        font-weight: 700;
+        letter-spacing: -0.065em;
+        line-height: 0.99;
+      }
+
+      .headline .accent { color: #7844df; }
+
+      .headline-deck {
+        position: absolute;
+        left: 103px;
+        top: 337px;
+        width: 455px;
+        color: #685f76;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        line-height: 1.45;
+      }
+
+      .evidence-tag {
+        position: absolute;
+        left: 710px;
+        top: 78px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.1em;
+      }
+
+      .evidence-tag::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #7844df;
+        content: "";
+      }
+
+      .evidence-window {
+        position: absolute;
+        left: 710px;
+        top: 108px;
+        width: 1110px;
+        height: 772px;
+        overflow: hidden;
+        border: 1px solid #e5e1ec;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px #211b3510;
+        transform-origin: right center;
+      }
+
+      .source-plate {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        width: 1110px;
+        height: auto;
+        max-width: none;
+        will-change: transform;
+      }
+
+      .frame-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 4px;
+        background: #7844df;
+        transform-origin: left center;
+      }
+
+      .rule-summary {
+        position: absolute;
+        left: 101px;
+        top: 483px;
+        width: 510px;
+      }
+
+      .summary-label {
+        color: #7844df;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0.12em;
+      }
+
+      .summary-rail {
+        position: absolute;
+        left: 1px;
+        top: 35px;
+        width: 1px;
+        height: 250px;
+        background: #b393ff;
+        transform-origin: top center;
+      }
+
+      .rule-item {
+        position: relative;
+        display: flex;
+        align-items: baseline;
+        gap: 18px;
+        height: 73px;
+        padding-left: 28px;
+      }
+
+      .rule-item:first-of-type { margin-top: 22px; }
+
+      .rule-index {
+        flex: 0 0 25px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+      }
+
+      .rule-copy {
+        color: #33273c;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        line-height: 1.1;
+        white-space: nowrap;
+      }
+
+      .rule-copy strong {
+        color: #7844df;
+        font-weight: 700;
+      }
+
+      .approval-note {
+        position: absolute;
+        left: 101px;
+        top: 798px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #33273c;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+      }
+
+      .approval-note::before {
+        width: 28px;
+        height: 1px;
+        background: #7844df;
+        content: "";
+      }
+
+      .hold-notes {
+        position: absolute;
+        left: 101px;
+        top: 839px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0.015em;
+        line-height: 1.55;
+      }
+
+      .scope-note {
+        position: absolute;
+        left: 1493px;
+        top: 918px;
+        padding-left: 15px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0.025em;
+      }
+
+      .scope-note::before {
+        position: absolute;
+        left: 0;
+        top: 7px;
+        width: 5px;
+        height: 5px;
+        border: 1px solid #7844df;
+        border-radius: 50%;
+        content: "";
+      }
+    </style>
+  </head>
+  <body>
+    <main id="frame-02" class="clip" data-composition-id="frame-02" data-start="0" data-duration="10" data-width="1920" data-height="1080">
+      <div class="ground clip" aria-hidden="true"></div>
+      <div class="top-rule" aria-hidden="true"></div>
+      <div class="eyebrow">EVIDENCE-FIRST REPAIR / POL-001</div>
+
+      <h1 class="headline">Freeze the<br><span class="accent">rule</span> first.</h1>
+      <div class="headline-deck" id="headline-deck">Before the fix, approve<br>a reviewable contract.</div>
+
+      <div class="evidence-tag" id="evidence-tag">ACTUAL CONTRACT · RUN d7dcc898</div>
+      <figure class="evidence-window" id="evidence-window" aria-label="Actual KioskProof policy contract screen">
+        <img class="source-plate" id="source-plate" src="assets/final-contract.png" alt="Actual KioskProof screen showing POL-001 and contract review">
+        <div class="frame-line" id="frame-line" aria-hidden="true"></div>
+      </figure>
+
+      <section class="rule-summary" aria-label="Summary of the frozen POL-001 rule">
+        <div class="summary-label" id="summary-label">POL-001 · FIXED RULE</div>
+        <div class="summary-rail" id="summary-rail" aria-hidden="true"></div>
+        <div class="rule-item" id="rule-one">
+          <span class="rule-index">01</span>
+          <span class="rule-copy">Same purchase intent</span>
+        </div>
+        <div class="rule-item" id="rule-two">
+          <span class="rule-index">02</span>
+          <span class="rule-copy"><strong>2</strong> concurrent requests</span>
+        </div>
+        <div class="rule-item" id="rule-three">
+          <span class="rule-index">03</span>
+          <span class="rule-copy"><strong>1</strong> order · <strong>1</strong> simulated charge</span>
+        </div>
+      </section>
+
+      <div class="approval-note" id="approval-note">Explicit review · approval</div>
+      <div class="hold-notes" id="hold-notes">5s after barrier release · new intent, new order</div>
+      <div class="scope-note" id="scope-note">Synthetic checkout · no real payment</div>
+    </main>
+
+    <script>
+      (function () {
+        window.__timelines = window.__timelines || {};
+
+        var root = document.querySelector('[data-composition-id="frame-02"]');
+        var compositionId = root.dataset.compositionId;
+        var tl = gsap.timeline({ paused: true });
+        var inert = { value: 0 };
+
+        // Deterministic seek state: the headline is intentionally readable at t=0.
+        gsap.set("#source-plate", { y: -780 });
+        gsap.set("#evidence-window", { autoAlpha: 0, x: 32, scale: 0.986, transformOrigin: "right center" });
+        gsap.set(["#evidence-tag", "#headline-deck"], { autoAlpha: 0, y: 14 });
+        gsap.set("#frame-line", { scaleX: 0 });
+        gsap.set(["#summary-label", "#rule-one", "#rule-two", "#rule-three", "#approval-note", "#hold-notes", "#scope-note"], { autoAlpha: 0, y: 16 });
+        gsap.set("#summary-rail", { scaleY: 0 });
+
+        // Inert driver keeps the paused sub-composition seekable for its complete 10 seconds.
+        tl.to(inert, { value: 1, duration: 10, ease: "none" }, 0);
+
+        // 0.0-2.5s: the fixed contract arrives as the first proof surface.
+        tl.to("#evidence-window", { autoAlpha: 1, x: 0, scale: 1, duration: 0.42, ease: "power3.out" }, 0.12);
+        tl.to("#frame-line", { scaleX: 1, duration: 0.54, ease: "power3.out" }, 0.24);
+        tl.to("#evidence-tag", { autoAlpha: 1, y: 0, duration: 0.38, ease: "power2.out" }, 0.45);
+        tl.to("#headline-deck", { autoAlpha: 1, y: 0, duration: 0.42, ease: "power2.out" }, 0.82);
+
+        // 2.5-6.5s: move the one real plate down from its approval block to POL-001.
+        tl.to("#source-plate", { y: -1030, duration: 1.5, ease: "power2.inOut" }, 2.58);
+        tl.to("#summary-label", { autoAlpha: 1, y: 0, duration: 0.32, ease: "power2.out" }, 2.48);
+        tl.to("#summary-rail", { scaleY: 1, duration: 0.62, ease: "power3.out" }, 2.61);
+        tl.to("#rule-one", { autoAlpha: 1, y: 0, duration: 0.36, ease: "power3.out" }, 2.72);
+        tl.to("#rule-two", { autoAlpha: 1, y: 0, duration: 0.36, ease: "power3.out" }, 3.20);
+        tl.to("#rule-three", { autoAlpha: 1, y: 0, duration: 0.36, ease: "power3.out" }, 3.68);
+
+        // 6.5-10.0s: retain the approval and scope boundaries in a quiet, readable hold.
+        tl.to("#approval-note", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 6.52);
+        tl.to("#hold-notes", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 6.77);
+        tl.to("#scope-note", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 7.02);
+
+        window.__timelines[compositionId] = tl;
+      })();
+    </script>
+  </body>
+</html>

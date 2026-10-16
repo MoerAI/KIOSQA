@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KioskProof — Proof is the product</title>
+  <style>
+    @font-face {
+      font-family: "NanumSquareRound";
+      src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "SFMono-Regular";
+      src: local("SF Mono");
+    }
+
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #f7f6f9;
+    }
+
+    body {
+      color: #261f32;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #frame-01 {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: #f7f6f9;
+      isolation: isolate;
+    }
+
+    .clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .ground {
+      z-index: -1;
+      background: #f7f6f9;
+    }
+
+    .ground::before {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 14px;
+      content: "";
+      background: #20182d;
+    }
+
+    .safe {
+      position: absolute;
+      inset: 0;
+      padding: 98px 100px 184px;
+    }
+
+    .opening,
+    .claim,
+    .evidence,
+    .scope {
+      will-change: opacity, transform;
+    }
+
+    .opening {
+      position: absolute;
+      top: 116px;
+      left: 100px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      opacity: 1;
+    }
+
+    .evidence-rule {
+      width: 48px;
+      height: 2px;
+      background: #a076ed;
+    }
+
+    .eyebrow,
+    .plate-kicker {
+      margin: 0;
+      color: #685f76;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      line-height: 1.2;
+    }
+
+    .claim {
+      position: absolute;
+      top: 257px;
+      left: 100px;
+      width: 900px;
+      margin: 0;
+      color: #261f32;
+      font-family: "NanumSquareRound", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 94px;
+      font-weight: 700;
+      letter-spacing: -0.065em;
+      line-height: 1.01;
+      opacity: 0;
+    }
+
+    .claim-final {
+      top: 276px;
+      font-size: 92px;
+    }
+
+    .claim em {
+      color: #7844df;
+      font-style: normal;
+    }
+
+    .evidence {
+      position: absolute;
+      top: 163px;
+      right: 100px;
+      width: 650px;
+      padding: 18px;
+      border: 1px solid #e5e1ec;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 10px 30px #211b3510;
+      opacity: 0;
+    }
+
+    .plate-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      height: 27px;
+      padding: 0 2px 13px;
+      border-bottom: 1px solid #e5e1ec;
+    }
+
+    .plate-kicker {
+      color: #33273c;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+    }
+
+    .plate-source {
+      color: #685f76;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .proof-viewport {
+      position: relative;
+      width: 612px;
+      height: 622px;
+      margin-top: 18px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .proof-source {
+      position: absolute;
+      top: -3216px;
+      left: -1020px;
+      display: block;
+      width: 1728px;
+      max-width: none;
+      height: auto;
+    }
+
+    .scope {
+      position: absolute;
+      bottom: 190px;
+      left: 100px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #685f76;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.35;
+      opacity: 0;
+    }
+
+    .scope::before {
+      width: 24px;
+      height: 1px;
+      content: "";
+      background: #a076ed;
+    }
+  </style>
+</head>
+<body>
+  <main
+    id="frame-01"
+    data-composition-id="frame-01"
+    data-template-id="frame-01"
+    data-timeline-id="frame-01"
+    data-start="0"
+    data-duration="8"
+    data-width="1920"
+    data-height="1080"
+    aria-label="KioskProof evidence-first repair introduction"
+  >
+    <div class="clip ground" aria-hidden="true"></div>
+
+    <div class="safe">
+      <div class="opening" data-beat="opening">
+        <span class="evidence-rule" aria-hidden="true"></span>
+        <p class="eyebrow">EVIDENCE-FIRST REPAIR</p>
+      </div>
+
+      <p class="claim claim-one" data-beat="repair-is-not-enough">
+        A fix alone<br />isn't enough.
+      </p>
+
+      <p class="claim claim-final" data-beat="proof-remains" aria-label="A fix needs evidence.">
+        A fix needs<br /><em>evidence.</em>
+      </p>
+
+      <figure class="evidence" data-beat="recorded-evidence">
+        <figcaption class="plate-meta">
+          <span class="plate-kicker">RECORDED AFTER TABLE</span>
+          <span class="plate-source">d7dcc898</span>
+        </figcaption>
+        <div class="proof-viewport">
+          <img
+            class="proof-source"
+            src="assets/final-verified.png"
+            alt="Actual passing acceptance rows in the KioskProof verification table"
+          />
+        </div>
+      </figure>
+
+      <p class="scope" data-beat="scope">synthetic checkout · reviewed fixed target</p>
+    </div>
+  </main>
+
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    (() => {
+      const composition = document.querySelector('[data-composition-id="frame-01"]');
+      const compositionId = composition.dataset.compositionId;
+      const driver = { time: 0 };
+      const timeline = gsap.timeline({
+        paused: true,
+        defaults: { ease: "power3.out" }
+      });
+
+      gsap.set(".claim", { y: 24 });
+      gsap.set(".evidence", { y: 20 });
+      gsap.set(".scope", { y: 10 });
+      timeline.to(driver, { time: 8, duration: 8, ease: "none" }, 0);
+      timeline.to(".opening", { autoAlpha: 0, y: -8, duration: 0.32 }, 1.52);
+      timeline.to(".claim-one", { autoAlpha: 1, y: 0, duration: 0.5 }, 2.0);
+      timeline.to(".evidence", { autoAlpha: 1, y: 0, duration: 0.5 }, 2.22);
+      timeline.to(".claim-one", { autoAlpha: 0, y: -10, duration: 0.28 }, 4.62);
+      timeline.to(".claim-final", { autoAlpha: 1, y: 0, duration: 0.46 }, 5.0);
+      timeline.to(".scope", { autoAlpha: 1, y: 0, duration: 0.32 }, 5.56);
+
+      timeline.seek(0).pause();
+      window.__timelines = window.__timelines || {};
+      window.__timelines[compositionId] = timeline;
+    })();
+  </script>
+</body>
+</html>

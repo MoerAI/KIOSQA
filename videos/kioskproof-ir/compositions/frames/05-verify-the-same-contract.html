@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "KioskProof Local";
+        src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+        font-style: normal;
+        font-weight: 400 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "SFMono-Regular";
+        src: local("SF Mono");
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #f7f6f9;
+      }
+
+      #frame-05 {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        container-type: size;
+        background: #f7f6f9;
+        color: #261f32;
+        font-family: "KioskProof Local", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .quiet-rule {
+        position: absolute;
+        left: 100px;
+        top: 104px;
+        width: 50px;
+        height: 2px;
+        background: #a076ed;
+      }
+
+      .eyebrow,
+      .stamp,
+      .plate-label,
+      .case-note {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        line-height: 1.2;
+      }
+
+      .eyebrow {
+        position: absolute;
+        left: 168px;
+        top: 94px;
+        color: #685f76;
+      }
+
+      #thesis {
+        position: absolute;
+        left: 100px;
+        top: 158px;
+        width: 690px;
+        font-size: 72px;
+        font-weight: 900;
+        letter-spacing: -0.065em;
+        line-height: 1.02;
+        color: #261f32;
+      }
+
+      #thesis span {
+        display: block;
+      }
+
+      #thesis .accent {
+        color: #7844df;
+      }
+
+      .plate-label {
+        position: absolute;
+        left: 916px;
+        top: 64px;
+        color: #685f76;
+      }
+
+      #after-evidence {
+        position: absolute;
+        left: 916px;
+        top: 92px;
+        width: 786px;
+        height: 704px;
+        overflow: hidden;
+        border: 1px solid #e5e1ec;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px #211b3510;
+      }
+
+      #after-evidence::before {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background: #7844df;
+        content: "";
+      }
+
+      #after-evidence img {
+        position: absolute;
+        top: -1485px;
+        left: -455px;
+        width: 936px;
+        max-width: none;
+        height: auto;
+      }
+
+      .stamp {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        height: 31px;
+        padding: 0 12px;
+        border: 1px solid #e5e1ec;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #685f76;
+        white-space: nowrap;
+      }
+
+      #pass-label {
+        top: 64px;
+        left: 1220px;
+        border-color: #cfe8dc;
+        color: #197657;
+      }
+
+      #run-label {
+        top: 812px;
+        left: 916px;
+      }
+
+      #hash-label {
+        top: 812px;
+        left: 1110px;
+        border-color: #cfe8dc;
+        color: #197657;
+      }
+
+      #comparison-heading {
+        position: absolute;
+        top: 438px;
+        left: 100px;
+        color: #685f76;
+      }
+
+      #before-evidence {
+        position: absolute;
+        top: 486px;
+        left: 100px;
+        width: 560px;
+        height: 342px;
+        overflow: hidden;
+        border: 1px solid #e5e1ec;
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px #211b3510;
+      }
+
+      #before-evidence::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: #c24657;
+        content: "";
+      }
+
+      #before-evidence img {
+        position: absolute;
+        top: -1314px;
+        left: -183px;
+        width: 1051px;
+        max-width: none;
+        height: auto;
+      }
+
+      .tally {
+        position: absolute;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .tally .tally-kicker {
+        display: block;
+        margin-bottom: 5px;
+        color: #685f76;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+      }
+
+      .tally .tally-value {
+        display: block;
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+      }
+
+      #before-tally {
+        top: 844px;
+        left: 100px;
+      }
+
+      #before-tally .tally-value {
+        color: #c24657;
+      }
+
+      #after-tally {
+        top: 844px;
+        left: 916px;
+      }
+
+      #after-tally .tally-value {
+        color: #197657;
+      }
+
+      #comparison-arrow {
+        position: absolute;
+        top: 636px;
+        left: 698px;
+        width: 164px;
+        height: 42px;
+      }
+
+      #comparison-arrow .line {
+        position: absolute;
+        top: 26px;
+        left: 0;
+        width: 144px;
+        height: 1px;
+        background: #a076ed;
+      }
+
+      #comparison-arrow .line::after {
+        position: absolute;
+        top: -4px;
+        right: 0;
+        width: 8px;
+        height: 8px;
+        border-top: 1px solid #7844df;
+        border-right: 1px solid #7844df;
+        transform: rotate(45deg);
+        content: "";
+      }
+
+      #comparison-arrow .arrow-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: #7844df;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        white-space: nowrap;
+      }
+
+      #case-note {
+        position: absolute;
+        top: 854px;
+        left: 1280px;
+        color: #197657;
+      }
+
+      #scope-note {
+        position: absolute;
+        top: 400px;
+        left: 100px;
+        color: #685f76;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        line-height: 1.35;
+      }
+
+      #scope-note strong {
+        color: #261f32;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main
+      id="frame-05"
+      class="clip"
+      data-hf-id="hf-kioskproof-05"
+      data-composition-id="frame-05"
+      data-start="0"
+      data-duration="11"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="quiet-rule" aria-hidden="true"></div>
+      <div id="eyebrow" class="eyebrow">VERIFICATION / SAME CONTRACT</div>
+
+      <h1 id="thesis"><span>Same input.</span><span class="accent">Same tests.</span></h1>
+
+      <div id="after-plate-label" class="plate-label">ACTUAL VERIFIED PLATE / d7dcc898</div>
+      <figure id="after-evidence" aria-label="Corrected Cloud run d7dcc898 verified result proof plate">
+        <img src="assets/final-verified.png" alt="Verified KioskProof Cloud run with the after result and protected acceptance cases">
+      </figure>
+
+      <div id="pass-label" class="stamp">5 PROTECTED CASES PASSED</div>
+      <div id="run-label" class="stamp">RUN d7dcc898 · VERIFIED IN SCOPE</div>
+      <div id="hash-label" class="stamp">PROTECTED HASH · MATCHED</div>
+
+      <div id="comparison-heading" class="eyebrow">MEASURED / REPEATED INTENT</div>
+      <figure id="before-evidence" aria-label="Corrected Cloud run d7dcc898 before-repair proof plate">
+        <img src="assets/final-before.png" alt="Before-repair KioskProof Cloud run showing two orders and two simulated charges">
+      </figure>
+
+      <div id="comparison-arrow" aria-hidden="true">
+        <span class="arrow-label">SAME INPUT</span>
+        <span class="line"></span>
+      </div>
+
+      <div id="before-tally" class="tally">
+        <span class="tally-kicker">BEFORE REPAIR</span>
+        <span class="tally-value">2 orders / 2 simulated charges</span>
+      </div>
+      <div id="after-tally" class="tally">
+        <span class="tally-kicker">AFTER / REPEATED INTENT</span>
+        <span class="tally-value">1 order / 1 simulated charge</span>
+      </div>
+
+      <div id="case-note" class="case-note">AT-01 / 02 / 03 / 05 / 06</div>
+      <div id="scope-note"><strong>SYNTHETIC CHECKOUT</strong> · simulated charges only · no real-payment claim</div>
+    </main>
+
+    <script>
+      (function () {
+        const root = document.querySelector("[data-composition-id='frame-05']");
+        const id = root.dataset.compositionId;
+        const tl = gsap.timeline({ paused: true });
+        const inert = { time: 0 };
+
+        tl.to(inert, { time: 1, duration: 11, ease: "none" }, 0);
+
+        gsap.set("#eyebrow, #thesis", { autoAlpha: 0, y: 22 });
+        gsap.set("#after-evidence", { autoAlpha: 0, x: 36 });
+        gsap.set("#after-plate-label, #pass-label, #run-label, #hash-label", { autoAlpha: 0, y: 12 });
+        gsap.set("#comparison-heading, #before-tally, #after-tally, #case-note, #scope-note", { autoAlpha: 0, y: 14 });
+        gsap.set("#before-evidence", { autoAlpha: 0, x: -28 });
+        gsap.set("#comparison-arrow", { autoAlpha: 0, scaleX: 0.72, transformOrigin: "left center" });
+
+        tl.to("#eyebrow", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.12);
+        tl.to("#thesis", { autoAlpha: 1, y: 0, duration: 0.65, ease: "power3.out" }, 0.32);
+        tl.to("#after-evidence", { autoAlpha: 1, x: 0, duration: 0.65, ease: "power3.out" }, 1.08);
+        tl.to("#after-plate-label", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.32);
+
+        tl.to("#pass-label", { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" }, 2.55);
+        tl.to("#run-label", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 2.82);
+        tl.to("#hash-label", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 3.12);
+
+        tl.to("#comparison-heading", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 5.52);
+        tl.to("#before-evidence", { autoAlpha: 1, x: 0, duration: 0.55, ease: "power3.out" }, 5.76);
+        tl.to("#before-tally", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 6.14);
+        tl.to("#comparison-arrow", { autoAlpha: 1, scaleX: 1, duration: 0.4, ease: "power2.out" }, 6.38);
+        tl.to("#after-tally", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 6.72);
+
+        tl.to("#case-note", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 8.52);
+        tl.to("#scope-note", { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 8.74);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines[id] = tl;
+      })();
+    </script>
+  </body>
+</html>

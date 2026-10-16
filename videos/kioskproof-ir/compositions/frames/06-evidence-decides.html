@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <script src="assets/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "NanumSquareRoundB";
+      src: url("assets/NanumSquareRoundB.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "SFMono-Regular";
+      src: local("SF Mono");
+    }
+
+    :root {
+      --canvas: #f7f6f9;
+      --surface: #ffffff;
+      --ink: #261f32;
+      --muted: #685f76;
+      --border: #e5e1ec;
+      --plum: #20182d;
+      --violet: #7844df;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    #frame-06 {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "NanumSquareRoundB", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 700;
+    }
+
+    .clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .ground {
+      background: var(--canvas);
+    }
+
+    .plum-rail {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 20px;
+      background: var(--plum);
+    }
+
+    .brand-lockup {
+      position: absolute;
+      top: 155px;
+      left: 120px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--ink);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 21px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      line-height: 1;
+    }
+
+    .brand-lockup::before {
+      width: 48px;
+      height: 2px;
+      background: var(--violet);
+      content: "";
+    }
+
+    .evidence-window {
+      position: absolute;
+      top: 148px;
+      right: 142px;
+      width: 750px;
+      height: 620px;
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: 0 10px 30px #211b3510;
+    }
+
+    .evidence-window::after {
+      position: absolute;
+      inset: 0;
+      background: var(--canvas);
+      content: "";
+      opacity: 0.46;
+      pointer-events: none;
+    }
+
+    .evidence-source {
+      position: absolute;
+      top: -2310px;
+      left: -730px;
+      display: block;
+      width: 1440px;
+      height: auto;
+      max-width: none;
+    }
+
+    .plate-caption {
+      position: absolute;
+      top: 791px;
+      right: 142px;
+      width: 750px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.11em;
+      line-height: 1;
+      text-align: right;
+    }
+
+    .thesis {
+      position: absolute;
+      top: 318px;
+      left: 120px;
+      width: 900px;
+      font-size: 94px;
+      letter-spacing: -0.065em;
+      line-height: 1.03;
+      word-break: keep-all;
+    }
+
+    .thesis-line {
+      display: block;
+    }
+
+    .thesis .accent {
+      color: var(--violet);
+    }
+
+    .product-line {
+      position: absolute;
+      top: 555px;
+      left: 126px;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 25px;
+      font-weight: 400;
+      letter-spacing: -0.015em;
+      line-height: 1.3;
+    }
+
+    .handoff {
+      position: absolute;
+      top: 730px;
+      left: 120px;
+      width: 740px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+
+    .next-demo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--ink);
+      font-size: 27px;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+
+    .next-demo::before {
+      width: 10px;
+      height: 10px;
+      background: var(--violet);
+      content: "";
+    }
+
+    .scope-footer {
+      margin-top: 21px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.045em;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <main
+    id="frame-06"
+    data-composition-id="frame-06"
+    data-start="0"
+    data-duration="8"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="ground clip" aria-hidden="true"></div>
+    <div class="plum-rail" aria-hidden="true"></div>
+
+    <div class="brand-lockup">KIOSKPROOF</div>
+
+    <figure class="evidence-window" aria-label="Actual final KioskProof verification screen">
+      <img
+        class="evidence-source"
+        src="assets/final-verified.png"
+        alt="Actual KioskProof After panel and passing protected tests"
+      >
+    </figure>
+    <div class="plate-caption">ACTUAL EVIDENCE PLATE · FINAL VERIFICATION</div>
+
+    <div class="thesis" id="f6-thesis">
+      <span class="thesis-line" id="f6-line-one">Fix quickly.</span>
+      <span class="thesis-line" id="f6-line-two">Decide with <span class="accent">proof.</span></span>
+    </div>
+    <div class="product-line" id="f6-product-line">Fix the app. Keep the proof.</div>
+
+    <section class="handoff" id="f6-handoff" aria-label="Next scene and verification scope">
+      <div class="next-demo">Next: real browser demo</div>
+      <div class="scope-footer">Synthetic checkout · simulated payments · verified in scope</div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+
+      var root = document.querySelector('[data-composition-id="frame-06"]');
+      var compositionId = root.dataset.compositionId;
+      var tl = gsap.timeline({ paused: true });
+      var inert = { progress: 0 };
+
+      // The opening is intentionally legible: brand and the real evidence plate
+      // are already present before the thesis resolves.
+      gsap.set("#f6-line-one", { autoAlpha: 0, y: 26 });
+      gsap.set("#f6-line-two", { autoAlpha: 0, y: 26 });
+      gsap.set("#f6-product-line", { autoAlpha: 0, y: 12 });
+      gsap.set("#f6-handoff", { autoAlpha: 0 });
+
+      // Keep the paused local timeline seekable through its full eight seconds.
+      tl.to(inert, { progress: 1, duration: 8, ease: "none" }, 0);
+
+      // 2.0-5.5s: the brand promise resolves over the unaltered evidence plate.
+      tl.to("#f6-line-one", { autoAlpha: 1, y: 0, duration: 0.52, ease: "power3.out" }, 2.0);
+      tl.to("#f6-line-two", { autoAlpha: 1, y: 0, duration: 0.52, ease: "power3.out" }, 2.30);
+      tl.to("#f6-product-line", { autoAlpha: 1, y: 0, duration: 0.40, ease: "power2.out" }, 3.05);
+
+      // 5.5-8.0s: an unchanged, readable hold meets the t=60 hard cut to demo.
+      tl.set("#f6-handoff", { autoAlpha: 1 }, 5.5);
+
+      window.__timelines[compositionId] = tl;
+    })();
+  </script>
+</body>
+</html>
