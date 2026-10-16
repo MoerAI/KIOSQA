@@ -5,6 +5,16 @@ import type { Run, RunPhase } from "../src/types";
 
 const base = (process.env.KIOSKPROOF_URL ?? "http://127.0.0.1:8080").replace(/\/$/, "");
 const directory = join(".kioskproof/demo", new Date().toISOString().replace(/[:.]/g, "-"));
+const recordingArtifacts = {
+  overviewContract: join(directory, "overview-contract.png"),
+  overviewBaseline: join(directory, "overview-baseline.png"),
+  patchReview: join(directory, "patch-review.png"),
+  overviewVerified: join(directory, "overview-verified.png"),
+  evidence: join(directory, "evidence.png"),
+  recordedRun: join(directory, "recorded-run.json"),
+  evidenceIndex: join(directory, "evidence-artifacts.json"),
+  video: join(directory, "kioskproof-demo.webm"),
+};
 await mkdir(directory, { recursive: true });
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
@@ -61,6 +71,43 @@ function phase(page: Page, expected: RunPhase): Promise<string> {
   }), { expected });
 }
 
+async function selectTab(page: Page, tab: "overview" | "patch" | "evidence"): Promise<void> {
+  await page.locator(`#tab-${tab}`).click();
+  await page.locator(`#tab-${tab}[aria-selected="true"]`).waitFor({ state: "visible", timeout: 240000 });
+  await page.locator(`#panel-${tab}`).waitFor({ state: "visible", timeout: 240000 });
+}
+
+async function expandWorkflowJob(page: Page, job: "contract" | "reproduce" | "repair" | "verify", status: "waiting" | "passed"): Promise<void> {
+  const selector = `details.workflow-job[data-detail-id="${job}"].job-${status}`;
+  const details = page.locator(selector);
+  await details.waitFor({ state: "visible", timeout: 240000 });
+  if (!await details.evaluate((element) => (element as HTMLDetailsElement).open)) {
+    await details.locator("summary").click();
+  }
+  await page.locator(`${selector}[open]`).waitFor({ state: "visible", timeout: 240000 });
+}
+
+async function visiblePatchLink(page: Page): Promise<string> {
+  const patch = page.locator("#panel-patch").getByRole("link", { name: "Download diff" });
+  await patch.waitFor({ state: "visible", timeout: 240000 });
+  const patchPath = await patch.getAttribute("href");
+  if (!patchPath) throw new Error("The Patch tab did not expose its diff path.");
+  return new URL(patchPath, base).href;
+}
+
+async function visibleEvidenceLinks(page: Page): Promise<{ report: string; manifest: string }> {
+  const evidence = page.locator("#panel-evidence");
+  const report = evidence.getByRole("link", { name: "Markdown report" });
+  const manifest = evidence.getByRole("link", { name: "Result manifest" });
+  await Promise.all([
+    report.waitFor({ state: "visible", timeout: 240000 }),
+    manifest.waitFor({ state: "visible", timeout: 240000 }),
+  ]);
+  const [reportPath, manifestPath] = await Promise.all([report.getAttribute("href"), manifest.getAttribute("href")]);
+  if (!reportPath || !manifestPath) throw new Error("The Evidence tab did not expose its report and manifest paths.");
+  return { report: new URL(reportPath, base).href, manifest: new URL(manifestPath, base).href };
+}
+
 let runId: string | undefined;
 const started = performance.now();
 try {
@@ -71,21 +118,29 @@ try {
   await page.locator("#run-form button[type=submit]").click();
   await page.locator("#run-panel").scrollIntoViewIfNeeded();
   runId = await contract;
+  await selectTab(page, "overview");
+  await expandWorkflowJob(page, "contract", "waiting");
   console.log(`DEMO_PHASE ${runId} contract_review`);
-  await page.screenshot({ path: join(directory, "contract.png"), fullPage: true });
+  await page.screenshot({ path: recordingArtifacts.overviewContract, fullPage: true });
 
   const baseline = phase(page, "baseline_ready");
   await page.locator('[data-action="approve-contract"][data-decision="approved"]').click();
   await baseline;
-  await page.locator(".comparison").scrollIntoViewIfNeeded();
-  await page.screenshot({ path: join(directory, "before.png") });
+  await selectTab(page, "overview");
+  await expandWorkflowJob(page, "reproduce", "passed");
+  await page.locator("#panel-overview .comparison").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: recordingArtifacts.overviewBaseline, fullPage: true });
   console.log(`DEMO_PHASE ${runId} baseline_reproduced`);
 
   const proposal = phase(page, "awaiting_patch_approval");
   await page.locator('[data-action="repair"]').click();
-  await page.locator(".repair-card").scrollIntoViewIfNeeded();
   await proposal;
-  await page.screenshot({ path: join(directory, "argon-patch.png"), fullPage: true });
+  await selectTab(page, "patch");
+  await expandWorkflowJob(page, "repair", "waiting");
+  await page.locator("#panel-patch .repair-card").scrollIntoViewIfNeeded();
+  await page.locator("#panel-patch .diff").waitFor({ state: "visible", timeout: 240000 });
+  const patchArtifact = await visiblePatchLink(page);
+  await page.screenshot({ path: recordingArtifacts.patchReview, fullPage: true });
   console.log(`DEMO_PHASE ${runId} argon_patch_review`);
 
   // Subscribe before approval. The final SSE event is emitted only after the
@@ -117,24 +172,40 @@ try {
   void durable.catch(() => {}); // The original promise is awaited below; cleanup can also abort it.
   const complete = phase(page, "complete");
   await page.locator('[data-action="approve-patch"][data-decision="approved"]').click();
-  await page.locator(".comparison").scrollIntoViewIfNeeded();
   await complete;
-  await page.locator(".comparison").scrollIntoViewIfNeeded();
-  await page.screenshot({ path: join(directory, "verified.png"), fullPage: true });
+  await selectTab(page, "overview");
+  await expandWorkflowJob(page, "verify", "passed");
+  await page.locator("#panel-overview .comparison").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: recordingArtifacts.overviewVerified, fullPage: true });
   const run = await durable;
   if (run.verdict !== "VERIFIED_IN_SCOPE" || run.storage.error) throw new Error("The recorded run or durable export was not verified.");
-  await writeFile(join(directory, "recorded-run.json"), JSON.stringify(run, null, 2) + "\n");
-  // A deliberate three-second final-screen hold is video timing, not a test wait.
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await writeFile(recordingArtifacts.recordedRun, JSON.stringify(run, null, 2) + "\n");
+
+  await selectTab(page, "evidence");
+  const evidenceLinks = await visibleEvidenceLinks(page);
+  await page.screenshot({ path: recordingArtifacts.evidence, fullPage: true });
+  const runArtifacts = {
+    report: evidenceLinks.report,
+    manifest: evidenceLinks.manifest,
+    patch: patchArtifact,
+    evidence: run.evidence.map((item) => ({
+      evidenceId: item.evidenceId,
+      type: item.type,
+      relativeArtifactPath: item.relativeArtifactPath,
+      url: `${base}/artifacts/${run.id}/${item.relativeArtifactPath.split("/").map(encodeURIComponent).join("/")}`,
+    })),
+  };
+  await writeFile(recordingArtifacts.evidenceIndex, JSON.stringify(runArtifacts, null, 2) + "\n");
   console.log("DEMO_RESULT " + JSON.stringify({
     runId, verdict: run.verdict, elapsedMs: Math.round(performance.now() - started),
     source: base, model: run.attempts.at(-1)?.model, directory,
     approvalMode: "qa_driver", recording: "genuine browser recording, not live playback",
+    artifacts: recordingArtifacts, evidence: runArtifacts,
   }));
 } finally {
   proofAbort.abort();
   await context.close();
-  await video.saveAs(join(directory, "kioskproof-demo.webm"));
+  await video.saveAs(recordingArtifacts.video);
   await browser.close();
-  console.log(`DEMO_VIDEO ${join(directory, "kioskproof-demo.webm")}`);
+  console.log(`DEMO_VIDEO ${recordingArtifacts.video}`);
 }

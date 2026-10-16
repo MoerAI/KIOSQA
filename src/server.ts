@@ -46,7 +46,7 @@ export async function startServer(options: { port?: number; dataRoot?: string } 
             headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" },
           });
         }
-        if (request.method === "GET" && ["/style.css", "/client.js"].includes(url.pathname)) {
+        if (request.method === "GET" && ["/style.css", "/workflow.css", "/client.js"].includes(url.pathname)) {
           return new Response(Bun.file(join(ROOT, "public", url.pathname.slice(1))), {
             headers: { "Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff" },
           });

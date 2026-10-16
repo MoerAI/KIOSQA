@@ -4,7 +4,7 @@
 
 Evidence-first kiosk repair built with **Google Antigravity and Gemini 4 Argon** for the Google DeepMind hackathon on October 16, 2026. Antigravity interprets an operating rule and gives Argon real screenshots, request history, observed state, and bounded source. Argon proposes an application diff. An unchanged Playwright suite, not the model, determines the result.
 
-Live Cloud Run workbench: `https://kioskproof-129147568500.asia-northeast3.run.app`
+Recorded Cloud Run workbench URL (used by the October 16, 2026 evidence run; current reachability is not asserted): `https://kioskproof-129147568500.asia-northeast3.run.app`
 
 This repository implements the P0 synthetic duplicate-checkout scenario in `KioskProof-PRD.md`. The supplied PRD and research remain design/research records; measured implementation results belong in `docs/verification.md` and exported run manifests.
 
@@ -45,7 +45,13 @@ The home page shows whether the agent runtime is configured. A missing key/runti
 5. Approve the displayed patch hash. The harness creates a fresh candidate, type-checks it, and executes the same five protected cases.
 6. Export the Markdown report, JSON manifest, application patch, raw results, native Playwright report, screenshots, traces, and videos.
 
-Only `target/checkout.ts` is patchable. Tests, mock payments, observer, harness, startup commands, packages, lockfile, and configuration are protected. An invalid diff stops the run without execution. A failed candidate never replaces the seeded source. A second attempt is available only after a completed failed verification; there are at most two attempts and one active run.
+## Run progress UI
+
+During an active run, the workspace presents a GitHub Actions-style **Jobs & checks** view: define and freeze the rule, reproduce the defect, review the Argon repair, and verify unchanged checks. Each job reports queued, in-progress, awaiting-approval, succeeded, or failed state. The baseline and verification jobs expand to show protected-case status, duration, and runner timestamp.
+
+This progress comes from validated runner events and controller state, not an inferred countdown or a success toast. A terminal `VERIFIED_IN_SCOPE` badge still requires the controller's reproduced baseline, successful compilation, complete protected suite, unchanged hashes, approvals, and readable evidence.
+
+Only `target/checkout.ts` is patchable. Tests, mock payments, observer, harness, startup commands, packages, lockfile, and configuration are protected. An invalid diff stops the run without execution. A failed candidate never replaces the seeded source. A second attempt is available after a completed compiler failure or a completed failed regression, with the previous failure supplied as bounded context. Timeouts, process crashes, invalid patches, and protected-resource changes stop the loop. There are at most two attempts and one active run.
 
 The deployment is intentionally **reviewed fixed-target mode**, not a hardened sandbox. Contract and patch approvals are separate API operations bound to the exact content hash. No arbitrary URL, repository upload, user-supplied command, real purchase, or production deployment is accepted.
 
@@ -85,9 +91,10 @@ bun run rehearse --qa
 
 The rehearsal subscribes to server-sent run events before each action; it does not poll or silently retry a failed run. `--qa` is not represented as human review or organizer authorization. The web UI supports the normal manual workflow.
 
-For a genuine English UI recording, run `bun scripts/record-demo.ts` with
-`KIOSKPROOF_URL` set to the deployed URL. The recording labels simulated operator
-actions and waits for the final durable-export event. See `docs/demo.md`.
+For a new English UI recording, run `bun scripts/record-demo.ts` with
+`KIOSKPROOF_URL` set to a deployment you have confirmed is reachable. The recorder
+labels simulated operator actions and waits for the final durable-export event. The
+repository's historical Cloud Run endpoint is recorded above; see `docs/demo.md`.
 
 ## Google Cloud
 
@@ -102,7 +109,7 @@ bash scripts/deploy.sh ~/.config/gdm-hackathon/h2gdm-hack26icn-2705.env
 
 The script creates a dedicated runtime identity, grants it access to its secret and evidence bucket, and deploys one Cloud Run instance with always-allocated CPU. Background model and browser tasks must continue between HTTP requests. The service is public for the event demo; approvals and synthetic-target restrictions still apply. The script uses the key on stdin to Secret Manager, never in image layers, Git, command-line arguments, or browser storage.
 
-The event API key alone does **not** grant Cloud Run deployment permission. A Cloud project access failure is a deployment blocker, not a reason to claim a live Cloud URL. See `docs/verification.md` for the measured deployment status.
+The event API key alone does **not** grant Cloud Run deployment permission. A Cloud project access failure is a deployment blocker, not a reason to claim a live Cloud URL. `docs/verification.md` and `.kioskproof/cloud-backup/runs/41a794ce-6500-4570-b421-4e510e075a72/` retain the dated deployment evidence; neither asserts that the recorded URL is currently available.
 
 The public readiness endpoint is `/health`. Cloud Run reserves some URL paths
 ending in `z`; the deployed smoke test must not use `/healthz`.

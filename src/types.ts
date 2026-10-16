@@ -77,6 +77,15 @@ export interface TestResult {
   attachments: string[];
 }
 
+export interface TestProgress {
+  id: string;
+  title: string;
+  status: "queued" | "running" | TestResult["status"];
+  timestamp: string;
+  durationMs?: number;
+  error?: string;
+}
+
 export interface SuiteResult {
   executionStatus: "completed" | "infrastructure_error" | "timed_out" | "cancelled";
   processExitCode: number | null;
@@ -119,7 +128,13 @@ export interface Attempt {
   patchStatus: "proposed" | "rejected" | "applied_in_sandbox" | "compile_failed";
   approval: "pending" | "approved" | "rejected";
   rejectionReason?: string;
-  compile?: { exitCode: number; output: string; elapsedMs: number };
+  compile?: {
+    executionStatus: "completed" | "infrastructure_error" | "timed_out";
+    exitCode: number | null;
+    signal: string | null;
+    output: string;
+    elapsedMs: number;
+  };
   suite?: SuiteResult;
   protectedHashesMatch?: boolean;
   candidateRevision?: string;
@@ -166,6 +181,12 @@ export interface Run {
   approvals: Approval[];
   events: { timestamp: string; phase: RunPhase; message: string }[];
   durations: Record<string, number>;
+  liveSuite?: {
+    phase: string;
+    startedAt: string;
+    updatedAt: string;
+    tests: TestProgress[];
+  };
   error?: string;
   storage: { mode: "local" | "gcs"; bucket?: string; syncedAt?: string; error?: string };
   limitations: string[];

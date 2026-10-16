@@ -35,24 +35,44 @@ test("HTTP boundary rejects untrusted actions and unknown resources", async ({ r
 });
 
 test("a populated repair diff remains inside the mobile viewport", async ({ page }, testInfo) => {
+  const timestamp = new Date().toISOString();
   const suite: SuiteResult = {
     executionStatus: "completed", processExitCode: 0, expectedTestIds: [...TEST_IDS], skippedCount: 0,
     infrastructureErrors: [], elapsedMs: 100, reportPath: "", resultPath: "",
     screenshotPaths: [], artifactPaths: [],
     tests: TEST_IDS.map((id) => ({ id, title: id, status: "passed", durationMs: 1, attachments: [] })),
   };
+  const afterRepeated = suite.tests.find((item) => item.id === "AT-02")!;
+  afterRepeated.orderObservation = { source: "fixture-order-file", records: [{}] };
+  afterRepeated.paymentObservation = { source: "fixture-provider-ledger", records: [{}] };
+  const baseline: SuiteResult = {
+    ...suite,
+    processExitCode: 1,
+    tests: suite.tests.map((item) => ["AT-02", "AT-03"].includes(item.id) ? {
+      ...item,
+      status: "failed",
+      orderObservation: { source: "fixture-order-file", records: [{}, {}] },
+      paymentObservation: { source: "fixture-provider-ledger", records: [{}, {}] },
+    } : item),
+  };
   const run: Run = {
     id: "00000000-0000-4000-8000-000000000001", targetId: "synthetic-checkout", scenarioId: "duplicate-checkout",
-    createdAt: "2026-10-16T03:00:00.000Z", updatedAt: "2026-10-16T03:00:01.000Z",
+    createdAt: timestamp, updatedAt: timestamp,
     phase: "complete", input: { policyText: DEFAULT_POLICY, scenarioParameters: { delayMs: 800, repeatCount: 2 } },
     baselineRevision: "sha256:" + "b".repeat(64), contractHash: "c".repeat(64), protectedHash: "d".repeat(64),
+    contract: {
+      ruleId: "POL-001", version: 1, interpretation: "SUPPORTED", reviewReason: "",
+      scope: "Synthetic kiosk checkout", preconditions: [], actions: [], evidenceSources: [],
+      expectedOutcome: "A repeated purchase intent produces one order and one simulated charge.",
+    },
     approvedContractVersion: 1, executionStatus: "completed", baselineStatus: "reproduced",
     verificationStatus: "passed", humanApproval: "approved", verdict: "VERIFIED_IN_SCOPE",
-    executionMode: "reviewed_fixed_target", baseline: suite, evidence: [], approvals: [], events: [],
+    executionMode: "reviewed_fixed_target", baseline, evidence: [], approvals: [], events: [],
     durations: {}, storage: { mode: "local" }, limitations: [],
     attempts: [{
       number: 1, patchStatus: "applied_in_sandbox", approval: "approved", elapsedMs: 100,
       patchHash: "e".repeat(64), protectedHashesMatch: true, suite,
+      compile: { executionStatus: "completed", exitCode: 0, signal: null, output: "", elapsedMs: 1 },
       proposal: {
         baselineRevision: "sha256:" + "b".repeat(64), changedPaths: ["target/checkout.ts"],
         rationale: "UI layout fixture.", evidenceIds: [], observations: [], hypotheses: [], attemptNumber: 1,
@@ -65,9 +85,43 @@ test("a populated repair diff remains inside the mobile viewport", async ({ page
     body: renderPage(run, [run], { modelId: "gemini-4-argon", cloudProject: "layout-fixture", cloudRegion: "test", storageMode: "local", agentAvailable: false }),
   }));
   await page.goto("/layout-fixture");
+  await expect(page.locator(".workflow-job.job-passed")).toHaveCount(4);
+  await expect(page.locator(".comparison .count-grid").first().locator("strong")).toHaveText(["2", "2"]);
+  await expect(page.locator(".comparison .count-grid").last().locator("strong")).toHaveText(["1", "1"]);
+  await page.locator('[data-tab="patch"]').click();
   await expect(page.locator(".diff")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   const diff = page.locator(".diff");
   expect(await diff.evaluate((element) => element.getBoundingClientRect().right <= document.documentElement.clientWidth)).toBe(true);
+  await page.locator('[data-tab="evidence"]').click();
+  await expect(page.locator("#panel-evidence .hash-row")).toHaveCount(3);
+  expect(await page.locator(".diff").isVisible()).toBe(false);
+  run.phase = "verifying";
+  run.verdict = "NOT_VERIFIED";
+  run.verificationStatus = "not_run";
+  run.attempts[0].suite = undefined;
+  run.liveSuite = {
+    phase: "after-1", startedAt: run.createdAt, updatedAt: run.updatedAt,
+    tests: TEST_IDS.map((id) => ({
+      id, title: `${id} checkout`, status: id === "AT-02" ? "running" : "queued", timestamp: run.updatedAt,
+    })),
+  };
+  await page.reload();
+  await expect(page.locator(".workflow-job.job-running")).toHaveCount(1);
+  await expect(page.locator(".job-tests .test-running")).toHaveCount(1);
   await page.screenshot({ path: `.kioskproof/ui-qa/populated-${testInfo.project.name}.png`, fullPage: true });
+  run.phase = "failed";
+  run.verificationStatus = "failed";
+  run.verdict = "NOT_VERIFIED";
+  run.liveSuite = undefined;
+  run.attempts[0].patchStatus = "compile_failed";
+  run.attempts[0].compile = { executionStatus: "completed", exitCode: 2, signal: null, output: "TS2322", elapsedMs: 1 };
+  run.attempts[0].suite = undefined;
+  run.attempts[0].protectedHashesMatch = undefined;
+  await page.reload();
+  await expect(page.locator('[data-action="repair"]')).toBeVisible();
+  await page.locator('[data-tab="patch"]').click();
+  await expect(page.locator(".diff")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.screenshot({ path: `.kioskproof/ui-qa/compile-failed-${testInfo.project.name}.png`, fullPage: true });
 });

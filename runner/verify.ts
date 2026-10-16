@@ -3,12 +3,14 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { TEST_IDS, type Scenario, type StateObservation, type SuiteResult, type TestResult } from "../src/types.ts";
+import { TEST_IDS, type Scenario, type StateObservation, type SuiteResult, type TestProgress, type TestResult } from "../src/types.ts";
+import { PROGRESS_EVENT_KIND } from "./progress-reporter.ts";
 
 export interface RunAcceptanceOptions {
   workspace: string;
   outputDir: string;
   scenario: Scenario;
+  onProgress?: (event: TestProgress) => void;
 }
 
 interface ProcessResult {
@@ -27,6 +29,9 @@ interface Attachment {
 
 const EXPECTED_IDS = [...TEST_IDS];
 const OBSERVED_TEST_IDS = EXPECTED_IDS.filter((id) => id !== "AT-06");
+const MAX_PROGRESS_EVENT_BYTES = 8_192;
+const MAX_PROGRESS_TITLE_BYTES = 1_024;
+const MAX_PROGRESS_ERROR_BYTES = 4_096;
 
 export async function runAcceptance(options: RunAcceptanceOptions): Promise<SuiteResult> {
   const startedAt = Date.now();
@@ -52,7 +57,7 @@ export async function runAcceptance(options: RunAcceptanceOptions): Promise<Suit
   let processResult: ProcessResult | undefined;
 
   if (infrastructureErrors.length === 0) {
-    processResult = await runPlaywright(root, workspace, outputDir, options.scenario);
+    processResult = await runPlaywright(root, workspace, outputDir, options.scenario, options.onProgress);
     await writeFile(commandLogPath, formatProcessResult(processResult), "utf8");
     if (processResult.error) infrastructureErrors.push(processResult.error);
     if (processResult.signal) infrastructureErrors.push(`Playwright exited from signal ${processResult.signal}.`);
@@ -159,6 +164,7 @@ async function runPlaywright(
   workspace: string,
   outputDir: string,
   scenario: Scenario,
+  onProgress: ((event: TestProgress) => void) | undefined,
 ): Promise<ProcessResult> {
   const executable = join(root, "node_modules", ".bin", process.platform === "win32" ? "playwright.cmd" : "playwright");
   const bunExecutable = process.env.BUN_EXECUTABLE_PATH ?? process.execPath;
@@ -168,22 +174,91 @@ async function runPlaywright(
     KIOSKPROOF_OUTPUT_DIR: outputDir,
     KIOSKPROOF_SCENARIO: JSON.stringify(scenario),
     KIOSKPROOF_BUN_EXECUTABLE_PATH: bunExecutable,
-  }, root);
+  }, root, onProgress ? progressListener(onProgress) : undefined);
 }
 
-function runProcess(executable: string, args: string[], env: NodeJS.ProcessEnv, cwd: string): Promise<ProcessResult> {
+function runProcess(
+  executable: string,
+  args: string[],
+  env: NodeJS.ProcessEnv,
+  cwd: string,
+  onStdout?: (chunk: string) => void,
+): Promise<ProcessResult> {
   return new Promise((resolveProcess) => {
     const child = spawn(executable, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     let spawnError: string | undefined;
-    child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString("utf8"); });
+    child.stdout.on("data", (chunk: Buffer) => {
+      const text = chunk.toString("utf8");
+      stdout += text;
+      onStdout?.(text);
+    });
     child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8"); });
     child.on("error", (error) => { spawnError = `Unable to start Playwright: ${error.message}`; });
     child.on("close", (exitCode, signal) => {
       resolveProcess({ exitCode, signal, stdout, stderr, error: spawnError });
     });
   });
+}
+
+function progressListener(onProgress: (event: TestProgress) => void): (chunk: string) => void {
+  let pending = "";
+  let discarded = false;
+  return (chunk) => {
+    pending += chunk;
+    for (;;) {
+      const newline = pending.indexOf("\n");
+      if (newline === -1) break;
+      const line = pending.slice(0, newline);
+      pending = pending.slice(newline + 1);
+      if (!discarded) {
+        const event = parseProgressEvent(line);
+        if (event) onProgress(event);
+      }
+      discarded = false;
+    }
+    if (Buffer.byteLength(pending, "utf8") > MAX_PROGRESS_EVENT_BYTES) {
+      pending = "";
+      discarded = true;
+    }
+  };
+}
+
+export function parseProgressEvent(line: string): TestProgress | undefined {
+  if (Buffer.byteLength(line, "utf8") > MAX_PROGRESS_EVENT_BYTES) return undefined;
+  let event: Record<string, unknown>;
+  try {
+    event = asRecord(JSON.parse(line));
+  } catch {
+    return undefined;
+  }
+  const kind = stringValue(event.kind);
+  const id = stringValue(event.id);
+  const title = stringValue(event.title);
+  const status = progressStatus(event.status);
+  const timestamp = stringValue(event.timestamp);
+  if (
+    kind !== PROGRESS_EVENT_KIND
+    || !id
+    || !EXPECTED_IDS.includes(id as (typeof EXPECTED_IDS)[number])
+    || !title
+    || Buffer.byteLength(title, "utf8") > MAX_PROGRESS_TITLE_BYTES
+    || !title.startsWith(`${id} `)
+    || !status
+    || !timestamp
+    || !isIsoTimestamp(timestamp)
+  ) return undefined;
+
+  const durationMs = numberValue(event.durationMs);
+  const error = stringValue(event.error);
+  if (error !== undefined && Buffer.byteLength(error, "utf8") > MAX_PROGRESS_ERROR_BYTES) return undefined;
+  if (status === "running") {
+    return durationMs === undefined && error === undefined ? { id, title, status, timestamp } : undefined;
+  }
+  return durationMs !== undefined && durationMs >= 0
+    ? { id, title, status, timestamp, durationMs, ...(error === undefined ? {} : { error }) }
+    : undefined;
 }
 
 async function parseReporter(
@@ -405,6 +480,25 @@ function statusValue(value: unknown): TestResult["status"] {
     case "timedOut": return "timedOut";
     default: return "interrupted";
   }
+}
+
+function progressStatus(value: unknown): TestProgress["status"] | undefined {
+  switch (value) {
+    case "running":
+    case "passed":
+    case "failed":
+    case "skipped":
+    case "timedOut":
+    case "interrupted":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
+function isIsoTimestamp(value: string): boolean {
+  const time = Date.parse(value);
+  return Number.isFinite(time) && new Date(time).toISOString() === value;
 }
 
 function asArray(value: unknown): unknown[] {

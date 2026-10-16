@@ -2,7 +2,8 @@
 
 Measured on October 16, 2026. All orders, purchase intents, and charges are
 synthetic. These are small-sample empirical results, not a general repair
-benchmark or production payment certification.
+benchmark or production payment certification. Cloud statements are dated
+repository evidence; they do not assert that any public endpoint is reachable now.
 
 ## Actual Google stack
 
@@ -19,6 +20,20 @@ benchmark or production payment certification.
   reviews, applies, compiles, and verifies the resulting diff.
 - Actual usage and conversation IDs are stored per successful model call.
   API version is `unknown` because the SDK does not expose it.
+
+## Run-progress UI behavior
+
+For an active run, the workspace renders a GitHub Actions-style **Jobs & checks**
+workflow with four jobs: contract, baseline reproduction, Argon repair, and
+protected verification. Jobs show queued, in-progress, waiting-for-approval,
+succeeded, or failed state; the two suite jobs expose each acceptance case's
+runner-reported status, duration, and timestamp. The controller relays validated
+runner progress events, so this is not a simulated timer. A green terminal badge
+still depends on the controller verdict, not page text or HTTP success.
+
+`bun run test:ui` is the repository's local UI verification command. It checks
+the implementation's UI behavior; it does not verify current Cloud Run
+reachability.
 
 ## Frozen P0 acceptance coverage
 
@@ -57,11 +72,18 @@ Original and candidate results, screenshots, videos, native Playwright reports,
 patches, model receipts, and protected hashes are retained under
 `.kioskproof/runs/<run-id>/`. Each run has `report.md` and `manifest.json`.
 
-## Real Cloud Run browser demonstration
+## Recorded Cloud Run browser demonstration
 
-Run `41a794ce-6500-4570-b421-4e510e075a72` executed through the actual public
-Cloud Run UI, not a mock or local replay. Parameters were 800 ms and two
-repeated actions.
+Repository evidence records run `41a794ce-6500-4570-b421-4e510e075a72` as an
+actual public Cloud Run UI run, not a mock or local replay. This is a historical
+October 16, 2026 result, not a claim that the endpoint remains online. Parameters
+were 800 ms and two repeated actions.
+
+Primary evidence is retained in
+`.kioskproof/cloud-backup/runs/41a794ce-6500-4570-b421-4e510e075a72/run.json`,
+with the matching `manifest.json` and `report.md` alongside it. The run record is
+`VERIFIED_IN_SCOPE`, records GCS storage in
+`h2gdm-hack26icn-2705-kioskproof-evidence`, and contains 202 evidence entries.
 
 - Backend run time: **89.600 seconds**, meeting the 120-second target for this
   one sample.
@@ -87,11 +109,10 @@ approval and awaited the server's final export event.
 
 This is one measured Cloud demonstration, not a latency guarantee.
 
-The complete Cloud evidence bucket was also downloaded to
-`.kioskproof/cloud-backup/`: 213 files, 11.7 MiB. The downloaded contract,
-application patch, and protected-suite manifest hashes match the verified
-Cloud run. The recording and this local backup survive deletion of the event
-project.
+The repository's Cloud-evidence backup contains 213 files under
+`.kioskproof/cloud-backup/`. The downloaded contract, application patch, and
+protected-suite manifest hashes match the verified Cloud run. The recording and
+this local backup survive deletion of the event project.
 
 ## Earlier failures are retained
 
@@ -130,11 +151,12 @@ Google's front end returned 404 without an application request log. The code
 now uses `/health`. The actual home and `/api/runs` were already working; the
 404 was not treated as proof of an application failure or successful repair.
 
-The project is `h2gdm-hack26icn-2705`, region `asia-northeast3`. The published
-workbench is `https://kioskproof-129147568500.asia-northeast3.run.app`.
-The event account is authenticated in `.kioskproof/gcloud/`, separate from the
-user's existing personal Cloud configuration. API keys stay in Secret Manager
-and the server environment, not the image, Git, browser, or exported evidence.
+The historical project record is `h2gdm-hack26icn-2705` in
+`asia-northeast3`. Its recorded public workbench endpoint is
+`https://kioskproof-129147568500.asia-northeast3.run.app`; confirm reachability
+before using it, because this repository makes no current live-service claim.
+Credentials are not evidence locations. API keys stay in Secret Manager and the
+server environment, not the image, Git, browser, or exported evidence.
 
 ## Explicit limitations
 

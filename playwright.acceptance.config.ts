@@ -14,6 +14,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: [
+    ["./runner/progress-reporter.ts"],
     ["json", { outputFile: resolve(outputRoot, "playwright-results.json") }],
     ["html", { outputFolder: resolve(outputRoot, "playwright-html"), open: "never" }],
   ],

@@ -34,6 +34,21 @@ export function classifyBaseline(suite: SuiteResult): Run["baselineStatus"] {
   return duplicates.every((test) => test.status === "passed") ? "not_reproduced" : "inconclusive";
 }
 
+export function canRequestRepair(run: Run): boolean {
+  if (run.baselineStatus !== "reproduced" || run.attempts.length >= 2) return false;
+  if (run.phase === "baseline_ready") return true;
+  if (run.phase !== "failed" || run.verificationStatus !== "failed") return false;
+  const previous = run.attempts.at(-1);
+  return Boolean(
+    (previous?.patchStatus === "compile_failed" &&
+      previous.compile?.executionStatus === "completed" &&
+      previous.compile.exitCode !== 0) ||
+    (previous?.suite && hasCompleteTestSet(previous.suite) &&
+      previous.protectedHashesMatch === true &&
+      previous.suite.tests.some((test) => test.status === "failed")),
+  );
+}
+
 export function canVerify(run: Run, suite: SuiteResult, protectedUnchanged: boolean, evidenceReadable: boolean): boolean {
   const attempt = run.attempts.at(-1);
   return Boolean(
@@ -44,6 +59,7 @@ export function canVerify(run: Run, suite: SuiteResult, protectedUnchanged: bool
       run.protectedHash &&
       attempt?.approval === "approved" &&
       attempt.patchStatus === "applied_in_sandbox" &&
+      attempt.compile?.executionStatus === "completed" &&
       attempt.compile?.exitCode === 0 &&
       protectedUnchanged &&
       evidenceReadable &&

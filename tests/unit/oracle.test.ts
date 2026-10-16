@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { canVerify, classifyBaseline, hasCompleteTestSet } from "../../src/oracle";
+import { canRequestRepair, canVerify, classifyBaseline, hasCompleteTestSet } from "../../src/oracle";
 import { TEST_IDS, type Run, type SuiteResult } from "../../src/types";
 
 function suite(): SuiteResult {
@@ -59,11 +59,47 @@ test("passing browser tests alone cannot establish a verified repair", () => {
     humanApproval: "approved",
     contractHash: "contract",
     protectedHash: "suite",
-    attempts: [{ approval: "approved", patchStatus: "applied_in_sandbox", compile: { exitCode: 0 } }],
+    attempts: [{ approval: "approved", patchStatus: "applied_in_sandbox", compile: { executionStatus: "completed", exitCode: 0 } }],
   } as Run;
   expect(canVerify(run, suite(), true, true)).toBe(true);
   expect(canVerify(run, suite(), false, true)).toBe(false);
   expect(canVerify(run, suite(), true, false)).toBe(false);
   expect(canVerify({ ...run, baselineStatus: "not_reproduced" }, suite(), true, true)).toBe(false);
   expect(canVerify({ ...run, humanApproval: "pending" }, suite(), true, true)).toBe(false);
+});
+
+test("a completed compiler failure permits one final fresh-source proposal", () => {
+  const run = {
+    phase: "failed", baselineStatus: "reproduced", verificationStatus: "failed",
+    attempts: [{ patchStatus: "compile_failed", compile: { executionStatus: "completed", exitCode: 2 } }],
+  } as Run;
+  expect(canRequestRepair(run)).toBe(true);
+  run.attempts.push(run.attempts[0]);
+  expect(canRequestRepair(run)).toBe(false);
+});
+
+test("compiler timeouts, crashes, and invalid patches do not reopen the model loop", () => {
+  const run = {
+    phase: "failed", baselineStatus: "reproduced", verificationStatus: "failed",
+    attempts: [{ patchStatus: "compile_failed", compile: { executionStatus: "timed_out", exitCode: null } }],
+  } as Run;
+  expect(canRequestRepair(run)).toBe(false);
+  run.attempts[0].compile!.executionStatus = "infrastructure_error";
+  expect(canRequestRepair(run)).toBe(false);
+  run.attempts[0].patchStatus = "rejected";
+  run.attempts[0].compile!.executionStatus = "completed";
+  expect(canRequestRepair(run)).toBe(false);
+});
+
+test("failed complete regressions may retry, but changed protected resources may not", () => {
+  const failed = suite();
+  failed.tests[1].status = "failed";
+  failed.processExitCode = 1;
+  const run = {
+    phase: "failed", baselineStatus: "reproduced", verificationStatus: "failed",
+    attempts: [{ patchStatus: "applied_in_sandbox", suite: failed, protectedHashesMatch: true }],
+  } as Run;
+  expect(canRequestRepair(run)).toBe(true);
+  run.attempts[0].protectedHashesMatch = false;
+  expect(canRequestRepair(run)).toBe(false);
 });

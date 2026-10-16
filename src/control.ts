@@ -6,7 +6,7 @@ import { runAcceptance } from "../runner/verify";
 import { interpretPolicy, proposePatch } from "./model";
 import { CloudEvidence, listFiles, protectedSnapshot, readableArtifact, writeExports } from "./artifacts";
 import { InputError, parseRunInput } from "./input";
-import { canVerify, classifyBaseline } from "./oracle";
+import { canRequestRepair, canVerify, classifyBaseline } from "./oracle";
 import { hash, validatePatch } from "./patch";
 import { SCENARIO_ID, TARGET_ID, TEST_IDS, type Approval, type Attempt, type Run, type RunPhase, type SuiteResult } from "./types";
 
@@ -56,9 +56,12 @@ async function compileCandidate(root: string, workspace: string): Promise<NonNul
     child.stdout.on("data", append);
     child.stderr.on("data", append);
     child.once("error", (error) => { clearTimeout(timer); reject(error); });
-    child.once("close", (code) => {
+    child.once("close", (code, signal) => {
       clearTimeout(timer);
-      resolveResult({ exitCode: timedOut ? 124 : code ?? 1, output, elapsedMs: Math.round(performance.now() - started) });
+      resolveResult({
+        executionStatus: timedOut ? "timed_out" : signal || code === null ? "infrastructure_error" : "completed",
+        exitCode: code, signal, output, elapsedMs: Math.round(performance.now() - started),
+      });
     });
   });
 }
@@ -278,8 +281,7 @@ export class ControlPlane {
   requestRepair(id: string): Run {
     const run = this.get(id);
     const previous = run.attempts.at(-1);
-    const retry = run.phase === "failed" && previous?.suite?.executionStatus === "completed" && run.verificationStatus === "failed";
-    if ((run.phase !== "baseline_ready" && !retry) || run.baselineStatus !== "reproduced" || run.attempts.length >= 2) {
+    if (!canRequestRepair(run)) {
       throw new InputError("Repair requires a reproduced baseline and an available attempt (maximum two).", 409);
     }
     if (this.activeRun && this.activeRun !== run.id) throw new InputError("Another run is active.", 409);
@@ -320,7 +322,11 @@ export class ControlPlane {
         ...(previous?.suite ? { previousFailure: JSON.stringify(previous.suite.tests.map((test) => ({
           id: test.id, status: test.status, error: test.error?.slice(0, 400),
           orders: test.orderObservation?.records.length, charges: test.paymentObservation?.records.length,
-        }))) } : {}),
+        }))) } : previous?.compile ? { previousFailure: JSON.stringify({
+          executionStatus: previous.compile.executionStatus,
+          exitCode: previous.compile.exitCode,
+          output: Buffer.from(previous.compile.output).subarray(0, 1500).toString("utf8"),
+        }) } : {}),
       });
       attempt.model = result.meta;
       attempt.proposal = result.data;
@@ -379,10 +385,11 @@ export class ControlPlane {
       attempt.candidateRevision = `sha256:${hash(checked.source)}`;
       attempt.compile = await compileCandidate(this.root, candidate);
       await writeFile(join(this.directory(run), `compile-${attempt.number}.log`), attempt.compile.output || `Exit code: ${attempt.compile.exitCode}\n`);
-      if (attempt.compile.exitCode !== 0) {
+      if (attempt.compile.executionStatus !== "completed" || attempt.compile.exitCode !== 0) {
         attempt.patchStatus = "compile_failed";
+        run.executionStatus = attempt.compile.executionStatus;
         attempt.elapsedMs += Math.round(performance.now() - started);
-        run.verificationStatus = "failed";
+        run.verificationStatus = attempt.compile.executionStatus === "completed" ? "failed" : "inconclusive";
         this.event(run, "failed", "Candidate compilation failed. No passing verification is claimed.");
         await this.save(run, true);
         return;
@@ -418,8 +425,28 @@ export class ControlPlane {
   }
 
   private async executeSuite(run: Run, workspace: string, output: string): Promise<SuiteResult> {
-    const suite = await runAcceptance({ workspace, outputDir: output, scenario: run.input.scenarioParameters });
     const directory = this.directory(run);
+    const startedAt = new Date().toISOString();
+    run.liveSuite = {
+      phase: relative(directory, output).split(sep).join("/"),
+      startedAt,
+      updatedAt: startedAt,
+      tests: TEST_IDS.map((id) => ({ id, title: id, status: "queued", timestamp: startedAt })),
+    };
+    for (const listener of this.subscribers.get(run.id) ?? []) listener(run);
+    const suite = await runAcceptance({
+      workspace,
+      outputDir: output,
+      scenario: run.input.scenarioParameters,
+      onProgress: (progress) => {
+        const index = run.liveSuite?.tests.findIndex((test) => test.id === progress.id) ?? -1;
+        if (index < 0 || !run.liveSuite) return;
+        run.liveSuite.tests[index] = progress;
+        run.liveSuite.updatedAt = progress.timestamp;
+        run.updatedAt = progress.timestamp;
+        for (const listener of this.subscribers.get(run.id) ?? []) listener(run);
+      },
+    });
     const normalize = (path: string) => {
       const absolute = resolve(path.startsWith("/") ? path : join(output, path));
       const result = relative(directory, absolute).split(sep).join("/");
