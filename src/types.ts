@@ -107,7 +107,7 @@ export interface Approval {
   timestamp: string;
   contentHash: string;
   decision: "approved" | "rejected";
-  actor: "operator";
+  actor: "operator" | "qa_driver";
 }
 
 export interface Attempt {

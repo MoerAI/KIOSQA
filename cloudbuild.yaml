@@ -1,0 +1,15 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/kioskproof/app:${_REVISION}
+      - .
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/kioskproof/app:${_REVISION}
+substitutions:
+  _REGION: asia-northeast3
+  _REVISION: latest
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY

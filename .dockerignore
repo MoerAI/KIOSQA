@@ -1,0 +1,13 @@
+.git
+.omo
+.venv
+.kioskproof
+node_modules
+.env
+.env.*
+!.env.example
+test-results
+playwright-report
+*.zip
+**/__pycache__
+**/*.pyc

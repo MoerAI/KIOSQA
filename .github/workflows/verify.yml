@@ -1,0 +1,24 @@
+name: Verify frozen repair harness
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  trusted-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test tests/unit
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:ui
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kioskproof-browser-evidence
+          path: .kioskproof/ui-qa/
